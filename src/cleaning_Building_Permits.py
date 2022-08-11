@@ -99,7 +99,9 @@ permit_noLoc = permit_noLoc.loc[loc_isna,:]
 cleaned_dataset = pd.concat([permit_withLoc, permit_noLoc], axis=0)
 
 # We delete the ['Location'] Feature because we don't need it anymore
-cleaned_dataset.drop(['Location'], axis=1)
+cleaned_dataset.drop(['Location'], axis=1, inplace=True)
 
-# Export the dataset to csv
+# Export the dataset to csv version 3 (do not delete)
 cleaned_dataset.to_csv('Building_Permits_v3.csv',index=False)
+
+
