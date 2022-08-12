@@ -11,6 +11,7 @@ df1 = pd.DataFrame(
     'rmse_cv_std':[score_2.std().round(3)],
     'dataset_version':[fname1], # correct format examples : permit_building_v1, permit_building_v23 ... ect
     'dataset_shape':[dataset.shape],
+    'target_variable':[target_variable],
     'features_cat':[categorical_features],
     'features_num':[numeric_features],
     'random_state':[random_state],
