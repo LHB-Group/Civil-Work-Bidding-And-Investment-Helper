@@ -4,7 +4,9 @@ matplotlib
 seaborn
 plotly
 geopy
+geopy[aiohttp]
 cpi
 sklearn
 xgboost
 lightgbm
+pipenv
