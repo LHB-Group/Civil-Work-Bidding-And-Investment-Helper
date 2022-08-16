@@ -1,7 +1,7 @@
 import time
 import pandas as pd
 
-fname2= "./Tracking/exp_logs.csv"
+fname2= "../Tracking/exp_logs.csv"
 
 #In case of error in calculating score, the archived result will be -99,-99,-99
 scores = [score_1, score_2, score_3, score_4, score_5]
