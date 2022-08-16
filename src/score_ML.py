@@ -1,6 +1,16 @@
 import time
 import pandas as pd
 
+#In case of error in calculating score, the archived result will be -99,-99,-99
+scores = [score_1, score_2, score_3, score_4, score_5]
+for score in scores:
+    try:
+      if len(score) < 1 :
+         score=  [-99,-99,-99]
+    catch:
+         score=  [-99,-99,-99]      
+        
+    
 df0 = pd.read_csv("../Tracking/exp_logs.csv") 
 df1 = pd.DataFrame(
     {
