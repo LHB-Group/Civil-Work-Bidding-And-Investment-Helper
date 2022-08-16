@@ -7,7 +7,7 @@ for score in scores:
     try:
       if len(score) < 1 :
          score=  [-99,-99,-99]
-    catch:
+    except:
          score=  [-99,-99,-99]      
         
     
