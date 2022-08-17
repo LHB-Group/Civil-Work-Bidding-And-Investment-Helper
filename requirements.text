@@ -6,7 +6,7 @@ plotly
 geopy
 geopy[aiohttp]
 cpi==1.0.5
-sklearn
+sklearn==1.0.2
 xgboost
 lightgbm
 pipenv

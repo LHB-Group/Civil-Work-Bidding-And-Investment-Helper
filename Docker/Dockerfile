@@ -7,4 +7,5 @@ COPY requirements.txt requirements.txt
 RUN apt-get update
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
-CMD python app.py
+ENTRYPOINT ["streamlit", "run"]
+CMD ["app.py"]
