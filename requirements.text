@@ -5,8 +5,9 @@ seaborn
 plotly
 geopy
 geopy[aiohttp]
-cpi
+cpi==1.0.5
 sklearn
 xgboost
 lightgbm
 pipenv
+scipy
