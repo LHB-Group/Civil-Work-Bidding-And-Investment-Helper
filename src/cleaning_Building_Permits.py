@@ -176,23 +176,9 @@ dataset[col_]=dataset[col_].astype(float).astype(int).astype(str)
 #Export to dataset to csv v4
 #dataset.to_csv('Building_Permits_v4.csv',index=False)
 
-
 """
-    Database version 7 - 17/08/22
+    Database version 4b - 17/08/22
 """
-db_v4= 'https://drive.google.com/file/d/19ERs5bmAdxEfgUmTxgfIBhUoT6xPHzZy/view?usp=sharing'
-fname1 = db_v4
-fname1 = 'https://drive.google.com/uc?id=' + fname1.split('/')[-2]
-dataset = pd.read_csv(fname1)
-
-
-#for categories of proposed use with less than 20 data, we use category 'Other'
-col_ = 'Proposed Use'
-dataset[col_+'_']=re_category (dataset[col_] , 20, 'Other' )
-
-#for categories of zipcode with less than 20 data, we use category 'Other'
-col_ = 'Zipcode'
-dataset[col_+'_']=re_category (dataset[col_] , 20, 'Other' )
 
 #Manipulations on Number of Proposed Stories column
 #there are some mistaken values in number of proposed stories. we will use description column to fix some of them
@@ -271,23 +257,6 @@ def cat_stories (st):
 col_ ='Number of Proposed Stories'
 dataset[col_+'_cat'] = dataset[col_].apply(lambda x: cat_stories(x)).astype(str)
 
-
-#Adding columns with boxcox transformation
-#from scipy import stats
-#from scipy.stats import norm, skew
-from scipy.special import boxcox1p
-
-dataset['Number of Proposed Stories_cat_f']=pd.factorize(dataset['Number of Proposed Stories_cat'])[0]
-dataset['Proposed Use_cat_f']=pd.factorize(dataset['Proposed Use_cat'])[0]
-
-skewed_features = ['Number of Proposed Stories', 'Number of Proposed Stories_cat_f',
-         'Proposed Construction Type',  'Proposed Units', 'Proposed Use_cat_f',
-         'Duration_construction_days']
-
-lam = 0.10 #value obtained after trial and error. If 0 is used, boxcox1p becomes same with np.log1p 
-for feat in skewed_features:
-    dataset[feat+'_bct'] = boxcox1p(dataset[feat].fillna(dataset[feat].mean()), lam)
-
 #following masks have been applied after having data analyses performed.
 # see the notebok on exploratory data analysis for more details
 m_out0 = dataset['Est_Cost_Infl_log10'] <= 8.0
@@ -299,5 +268,40 @@ m_out = m_out0 & m_out1 & m_out2 & m_out3 & m_out4
 #removing outliers
 dataset=dataset.loc[m_out,:]
 
-#Export to dataset to csv v7
-dataset.to_csv('Building_Permits_v7.csv',index=False)
+""" 
+We keep only : 1 family dwelling, 2 family dwelling and apartments for the feature ["Proposed Use"]
+"""
+m_pu1 = dataset["Proposed Use"]=="1 family dwelling"
+m_pu2 = dataset["Proposed Use"]=="2 family dwelling"
+m_pu3 = dataset["Proposed Use"]=="apartments"
+m_pu = m_pu1 | m_pu2 | m_pu3
+dataset = dataset.loc[m_pu,:]
+
+#for categories of zipcode with less than 20 data, we use category 'Other'
+col_ = 'Zipcode'
+dataset[col_+'_']=re_category (dataset[col_] , 20, 'Other' )
+
+#for categories of proposed construction type with less than 20 data, we use category 99
+col_ = 'Proposed Construction Type'
+dataset[col_+'_']=re_category (dataset[col_] , 20, 'Other' )
+
+
+#Adding columns with boxcox transformation
+#from scipy import stats
+#from scipy.stats import norm, skew
+from scipy.special import boxcox1p
+
+dataset['Number of Proposed Stories_cat_f']=pd.factorize(dataset['Number of Proposed Stories_cat'])[0]
+dataset['Proposed Use_f']=pd.factorize(dataset['Proposed Use'])[0]
+dataset['Proposed Construction Type_f']=pd.factorize(dataset['Proposed Construction Type_'])[0]
+
+skewed_features = ['Number of Proposed Stories', 'Number of Proposed Stories_cat_f',
+         'Proposed Construction Type_f',  'Proposed Units', 'Proposed Use_f',
+         'Duration_construction_days']
+
+lam = 0.10 #lan value obtained after trial and error. If 0 is used, boxcox1p becomes same with np.log1p 
+for feat in skewed_features:
+    dataset[feat+'_bct'] = boxcox1p(dataset[feat].fillna(dataset[feat].mean()), lam)
+
+#Export to dataset to csv v4b
+dataset.to_csv('Building_Permits_v4b.csv',index=False)
