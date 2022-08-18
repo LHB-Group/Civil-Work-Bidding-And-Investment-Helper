@@ -93,8 +93,8 @@ st.markdown("""
 	    If you like it ❤️, thanks for sharing it with your network and friends! 
 	""")
 
-st.caption('letsgo')
-st.markdown("---")
+st.title('Data Analysis')
+
 db_v5 = 'https://drive.google.com/file/d/1X4YJP5fjfyk8f_TjSGBdIsTdv8MCCgY7/view?usp=sharing'
 
 DATA_URL = 'https://drive.google.com/uc?id=' + db_v5.split('/')[-2]
@@ -128,7 +128,6 @@ fig = px.scatter_mapbox(
     lat="lon",
     lon="lat",
     zoom = 11.0,
-    size='size',
     center = {'lat': LAT_0, 'lon': LON_0}, 
     color='Est_Cost_Infl_log10',
     title = 'Locations of buildings constructed in San Francisco since early 80s ',
@@ -167,6 +166,8 @@ fig1.update_layout(barmode='overlay')
 # Reduce opacity to see both histograms
 fig1.update_traces(opacity=0.75)
 st.plotly_chart(fig1, use_container_width=True)
+
+st.markdown("---")
 
 ### Footer 
 empty_space, footer = st.columns([1, 2])
