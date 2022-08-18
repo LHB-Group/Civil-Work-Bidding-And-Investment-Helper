@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import requests
+import re
 from geopy.geocoders import Nominatim
 import plotly.express as px 
 import plotly.graph_objects as go
@@ -108,14 +109,14 @@ if submitted2:
 
 
     project_detail = {'Permit Type' : [permit_type], 
-                'Proposed Units' : [n_units],
-                'Proposed Use_': [type_use],
-                'Duration_construction_days': [t_duration],
-                'Number of Proposed Stories_': [n_story] ,
-                'Year': [n_year],
                 'Proposed Construction Type_': [type_construction],
+                'Proposed Use_': [type_use],
+                'Number of Proposed Stories_': [n_story] ,
+                'Proposed Units' : [n_units],
+                'Duration_construction_days': [t_duration],
                 'address': [address],
-                'lat_lon': [coordinates]
+                'lat_lon': [coordinates],
+                'Year': [n_year]
                 }
     
 
@@ -126,13 +127,14 @@ if submitted2:
             ]
 
     val_dict = {'Permit Type' : [get_permit_type(permit_type)], 
-         	    'Proposed Units' : [float(n_units)],
-		        'Proposed Use_': [type_use],
-		        'Duration_construction_days': [float(t_duration)],
-		        'Number of Proposed Stories_': [float(n_story)] ,
-		        'Year': [n_year],
 		        'Proposed Construction Type_': [get_construction_type(type_construction)], 
-		        'lat_lon':[lat_lon]}
+		        'Proposed Use_': [type_use],
+		        'Number of Proposed Stories_': [float(n_story)] ,
+         	    'Proposed Units' : [float(n_units)],
+		        'Duration_construction_days': [float(t_duration)],
+		        'lat_lon':[lat_lon],
+		        'Year': [n_year]
+                }
 
     X_val= pd.DataFrame(val_dict)
     # load the model from disk
@@ -150,7 +152,9 @@ if submitted2:
     st.subheader("Results 💸💰🏷")
     st.subheader('Your project details')
     st.write(pd.DataFrame(project_detail)) 
-    st.subheader(f'➡️Estimated cost for your construction project is {Y_pred_lin} dollars.')
+    estimated_cost = re.sub(r'(?<!^)(?=(\d{3})+$)', r' ', str(Y_pred_lin))
+    st.subheader("Estimated cost for your construction project is :\n")
+    st.subheader(f"➡️ {estimated_cost} 💲")
 
 st.markdown("""
 	    The model is still in full development. Check back here again!
