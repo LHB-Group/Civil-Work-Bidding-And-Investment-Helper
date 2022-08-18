@@ -3,6 +3,13 @@ import pandas as pd
 import plotly.express as px 
 import plotly.graph_objects as go
 import joblib
+import sklearn
+from sklearn.ensemble import RandomForestRegressor,  GradientBoostingRegressor
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import RobustScaler,OneHotEncoder, StandardScaler
 
 ### Config
 st.set_page_config(
@@ -20,7 +27,8 @@ st.markdown("---")
 
 ### User inputs
 st.subheader("Please select the details of your construction project below.")
-col1, col2 = st.beta_columns(2)
+col1, col2 = st.columns(2)
+
 
 with col1:
     with st.form('Building geometry'):
@@ -35,51 +43,52 @@ with col2:
         t_duration= st.text_input(label='Estimated construction duration in days',key=5) #need to delete
         type_construction =  st.selectbox('Construction type', ['1', '2', '3', '4', '5','99'], key=6) #need to replace 99
         type_permit = st.slider(label='Permit Type', min_value=1, max_value=2, key=7)
-    	lon = st.text_input(label='Enter longitude',key=8)
-    	lat = st.text_input(label='Enter latitude',key=9)
+        lon = st.text_input(label='Enter longitude',key=8)
+        lat = st.text_input(label='Enter latitude',key=9)
         submitted2 = st.form_submit_button('Submit 2')
 
+	
 st.markdown("---")
 
-if submit1 & submit2 :
-	data_load_state = st.text('Loading results...')
-	#input
+if submitted2:
+         data_load_state = st.text('Loading results...')
+	#inputs
 
-	lat_lon = lat  * lon
+         lat_lon = float(lat)  * float(lon)
+
 	# Attn: Don't forget to change cols and types if you change your model
-	cols = ['Permit Type', 'Proposed Units', 'Proposed Use_',
-	       'Duration_construction_days', 'Number of Proposed Stories_', 'Year',
-	       'Proposed Construction Type_', 'lat_lon']
+         cols = ['Permit Type', 'Proposed Units', 'Proposed Use_',
+		       'Duration_construction_days', 'Number of Proposed Stories_', 'Year',
+		       'Proposed Construction Type_', 'lat_lon']
 
-	val_dict = {'Permit Type' : int(type_permit), 
-		    'Proposed Units' : float(n_units),
-		    'Proposed Use_': type_use,
-		    'Duration_construction_days': float(t_duration),
-		    'Number of Proposed Stories_': float(n_story) ,
-		    'Year': int(n_year),
-		    'Proposed Construction Type_': str(type_construction), 
-		    'lat_lon':lat_lon}
+         val_dict = {'Permit Type' : [int(type_permit)], 
+         	    'Proposed Units' : [float(n_units)],
+		    'Proposed Use_': [str(type_use)],
+		    'Duration_construction_days': [float(t_duration)],
+		    'Number of Proposed Stories_': [float(n_story)] ,
+		    'Year': [int(n_year)],
+		    'Proposed Construction Type_': [str(type_construction)], 
+		    'lat_lon':[float(lat_lon)]}
 
-	X_val= pd.DataFrame([val_dict])
-
-
+         X_val= pd.DataFrame(val_dict)
 	# load the model from disk
-	prepro_fn = 'prepro.joblib'#preprocessing model
-	model_fn  ='model.joblib'#random forest model
-	loaded_prepro = joblib.load(prepro_fn)
-	loaded_model = joblib.load(model_fn)
+         prepro_fn = 'prepro.joblib'#preprocessing model
+         model_fn  ='model.joblib'#random forest model
+         loaded_prepro = joblib.load(prepro_fn)
+         loaded_model = joblib.load(model_fn)
 
-	X_val = loaded_prepro.transform(X_val)
-	Y_pred = loaded_model.predict(X_val)
+         X_val = loaded_prepro.transform(X_val)
+         Y_pred = loaded_model.predict(X_val)
 
-	Y_pred_lin = int(10**Y_pred)
+         Y_pred_lin = int(10**Y_pred)
 
 	### Print the results
-	st.subheader("Results 💸💰🏷")
-	st.subheader('Your project details')
-	st.write(X_val) 
-	st.subheader(f'➡️Estimated cost for your construction project is {Y_pred_lin} dollars.')
-	st.markdown("""
+         st.subheader("Results 💸💰🏷")
+         st.subheader('Your project details')
+         st.write(pd.DataFrame(val_dict)) 
+         st.subheader(f'➡️Estimated cost for your construction project is {Y_pred_lin} dollars.')
+
+st.markdown("""
 	    The model is still in full development. Check back here again!
 	    If you like it ❤️, thanks for sharing it with your network and friends! 
 	""")
@@ -159,7 +168,6 @@ fig1.update_layout(barmode='overlay')
 fig1.update_traces(opacity=0.75)
 st.plotly_chart(fig1, use_container_width=True)
 
-
 ### Footer 
 empty_space, footer = st.columns([1, 2])
 
@@ -169,7 +177,6 @@ with empty_space:
 with footer:
     st.markdown("""
         🍇
-        If you want to learn more about the project, check out [Github link](https://github.com/LHB-Group/Civil-Work-Bidding-And-Investment-Helper) 📖
-    """)
-    
-    
+        If you want to learn more about the project, \ncheck out [Github link](https://github.com/LHB-Group/Civil-Work-Bidding-And-Investment-Helper) 📖
+    """)    
+
