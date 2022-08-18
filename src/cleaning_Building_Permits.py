@@ -155,13 +155,13 @@ dataset["Est_Cost_Infl_loge"] = np.log(dataset["Est_Cost_Infl"])
 #creating a new feature with lat times lon
 dataset['lat_lon']=dataset['lat']*dataset['lon']
 
-#for neighborhood categoriess less than 25 data, we use category 'other'
+#for neighborhood categoriess less than 20 data, we use category 'other'
 col_ = "Neighborhoods - Analysis Boundaries"
-dataset[col_]=re_category (dataset[col_] , 20, 'Other' )
+dataset[col_+'_']=re_category (dataset[col_] , 20, 'Other' )
 
-#for category of proposed construction type with less than 25 data, we use category '99'
+#for category of proposed construction type with less than 20 data, we use category '99'
 col_ = 'Proposed Construction Type'
-dataset[col_]=re_category (dataset[col_] , 20, '99' )
+dataset[col_+'_']=re_category (dataset[col_] , 20, '99' )
 
 #proposed construction type has values of '5.0', '1.0', '5', '2.0', '3.0', '4.0', '1', '3', '2', '4', 'III'
 #values for proposed construction type are modifed below in three steps
@@ -174,4 +174,134 @@ dataset[col_]= dataset[col_].fillna('99')
 dataset[col_]=dataset[col_].astype(float).astype(int).astype(str)
 
 #Export to dataset to csv v4
-dataset.to_csv('Building_Permits_v4.csv',index=False)
+#dataset.to_csv('Building_Permits_v4.csv',index=False)
+
+"""
+    Database version 4b - 17/08/22
+"""
+
+#Manipulations on Number of Proposed Stories column
+#there are some mistaken values in number of proposed stories. we will use description column to fix some of them
+#let's take rows where there less than 1 and more than 15 stories
+m_ps1 = dataset['Number of Proposed Stories'] > 15 
+m_ps2 = dataset['Number of Proposed Stories'] < 1
+m_ps3 = dataset['Number of Proposed Stories'].isna()
+#let's find description rows where we have 'story' word
+m_ps4 = dataset['Description'].fillna('empty').str.contains('story')
+#taking rows (m_ps1 or m_ps1) and m_ps3
+m_ps = ( m_ps1 | m_ps2 | m_ps3 ) & m_ps4
+
+def text_split(x):
+  #x will be sth similar to 'erect a two story 88 unit residential structure'
+  #we do text partition with 'story' 
+  #it returns tuple ('erect a two ', 'story', ' 88 unit residential structure')
+  #then, we take the first value of tuple 
+  #and then apply string manipulations to obtain floor number in text
+  return x.partition('story')[0].replace('-',' ').split(' ')[-2]
+
+def text2int (x):
+  #converting text to number for the possible cases
+  x = x.lower()
+  if 'one' in x:
+    y = 1
+  elif 'two' in x:
+    y= 2
+  elif 'three' in x:
+    y=3
+  elif 'four' in x:
+    y = 4
+  elif 'five' in x:
+    y = 5
+  elif 'six' in x:
+    y = 6
+  elif 'seven' in x:
+    y = 7
+  elif 'eight' in x:
+    y = 8
+  elif 'nine' in x:
+    y = 9
+  elif  'ten' in x:
+    y = 10
+  elif  'eleven' in x:
+    y = 11
+  else:
+    try : 
+      y = int(x)
+    except :
+      y = np.nan
+  return y
+
+col_ = 'Number of Proposed Stories'
+#a new columns for the manipulation
+dataset[col_+ '_'] = dataset[col_]
+
+#adding story numbers on the masked rows
+dataset.loc[m_ps,col_+ '_']=   dataset.loc[m_ps,'Description'].apply(lambda x:text_split(x) )
+dataset.loc[m_ps,col_+ '_']=   dataset.loc[m_ps,col_+ '_'].apply(lambda x : text2int(x))
+dataset.loc[:,col_+ '_']= dataset.loc[:,col_+ '_'].astype(float)
+
+#adding a column with story number categories
+def cat_stories (st): 
+    if st < 3 :
+      y = '0-2 stories'
+    elif st< 5 :
+      y = '3-4 stories'
+    elif st < 8 :
+      y = '5-7 stories'
+    elif st < 10 :
+      y = '8-9 stories'
+    else:
+      y = 'More than 10 stories'
+    return y
+
+col_ ='Number of Proposed Stories'
+dataset[col_+'_cat'] = dataset[col_].apply(lambda x: cat_stories(x)).astype(str)
+
+#following masks have been applied after having data analyses performed.
+# see the notebok on exploratory data analysis for more details
+m_out0 = dataset['Est_Cost_Infl_log10'] <= 8.0
+m_out1 = dataset['Est_Cost_Infl_log10'] >= 3.5
+m_out2 = dataset['Proposed Units'] <= 200
+m_out3 = dataset['Proposed Units'] > 0
+m_out4 = dataset['Number of Proposed Stories_'] <= 15
+m_out = m_out0 & m_out1 & m_out2 & m_out3 & m_out4
+#removing outliers
+dataset=dataset.loc[m_out,:]
+
+""" 
+We keep only : 1 family dwelling, 2 family dwelling and apartments for the feature ["Proposed Use"]
+"""
+m_pu1 = dataset["Proposed Use"]=="1 family dwelling"
+m_pu2 = dataset["Proposed Use"]=="2 family dwelling"
+m_pu3 = dataset["Proposed Use"]=="apartments"
+m_pu = m_pu1 | m_pu2 | m_pu3
+dataset = dataset.loc[m_pu,:]
+
+#for categories of zipcode with less than 20 data, we use category 'Other'
+col_ = 'Zipcode'
+dataset[col_+'_']=re_category (dataset[col_] , 20, 'Other' )
+
+#for categories of proposed construction type with less than 20 data, we use category 99
+col_ = 'Proposed Construction Type'
+dataset[col_+'_']=re_category (dataset[col_] , 20, 'Other' )
+
+
+#Adding columns with boxcox transformation
+#from scipy import stats
+#from scipy.stats import norm, skew
+from scipy.special import boxcox1p
+
+dataset['Number of Proposed Stories_cat_f']=pd.factorize(dataset['Number of Proposed Stories_cat'])[0]
+dataset['Proposed Use_f']=pd.factorize(dataset['Proposed Use'])[0]
+dataset['Proposed Construction Type_f']=pd.factorize(dataset['Proposed Construction Type_'])[0]
+
+skewed_features = ['Number of Proposed Stories', 'Number of Proposed Stories_cat_f',
+         'Proposed Construction Type_f',  'Proposed Units', 'Proposed Use_f',
+         'Duration_construction_days']
+
+lam = 0.10 #lan value obtained after trial and error. If 0 is used, boxcox1p becomes same with np.log1p 
+for feat in skewed_features:
+    dataset[feat+'_bct'] = boxcox1p(dataset[feat].fillna(dataset[feat].mean()), lam)
+
+#Export to dataset to csv v4b
+dataset.to_csv('Building_Permits_v4b.csv',index=False)
