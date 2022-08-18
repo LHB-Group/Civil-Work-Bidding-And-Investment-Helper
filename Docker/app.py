@@ -6,7 +6,7 @@ import joblib
 
 ### Config
 st.set_page_config(
-    page_title="SF Bidding and Investment Helper",
+    page_title="🌉 SF Bidding and Investment Helper",
     page_icon="🏗️ 👷 🚧 💸",
     layout="wide"
 )
@@ -84,6 +84,80 @@ if submit1 & submit2 :
 	    If you like it ❤️, thanks for sharing it with your network and friends! 
 	""")
 
+st.caption('letsgo')
+st.markdown("---")
+db_v5 = 'https://drive.google.com/file/d/1X4YJP5fjfyk8f_TjSGBdIsTdv8MCCgY7/view?usp=sharing'
+
+DATA_URL = 'https://drive.google.com/uc?id=' + db_v5.split('/')[-2]
+ACCESS_TOKEN = 'pk.eyJ1IjoiY3JvdXN0aS1iYXQiLCJhIjoiY2w2eHBuMnN5MGkyMjNpcW0wZHZiZHdqdiJ9.zNdgBN2jedI_E3jFWHDomQ'
+LAT_0 , LON_0 = 37.750000, -122.431000
+# Use `st.cache` when loading data is extremly useful
+# because it will cache your data so that your app 
+# won't have to reload it each time you refresh your app
+@st.cache
+def load_data():
+    data = pd.read_csv(DATA_URL)
+    return data
+
+st.text('Load data ...')
+
+data_load_state = st.text('Loading data ...')
+data = load_data()
+data_load_state.text("") # change text from "Loading data..." to "" once the the load_data function has run
+
+## Run the below code if the check is checked ✅
+if st.checkbox('Show raw data'):
+    st.header('Raw data')
+    st.write(data)  
+
+
+#Let's map all construction projects in a map
+px.set_mapbox_access_token(ACCESS_TOKEN)
+lat0 , lon0 = 37.750000, -122.431000
+fig = px.scatter_mapbox(
+    data.loc[:3000, :], 
+    lat="lon",
+    lon="lat",
+    zoom = 11.0,
+    size='size',
+    center = {'lat': LAT_0, 'lon': LON_0}, 
+    color='Est_Cost_Infl_log10',
+    title = 'Locations of buildings constructed in San Francisco since early 80s ',
+    opacity = 0.7,
+    height = 700,
+    custom_data=['Permit Type', 'Est_Cost_Infl', 'Year', 'Neighborhoods - Analysis Boundaries']         
+    )
+
+fig.update_layout(hovermode="closest")
+fig.update_traces(hovertemplate="Type of Permit:  %{customdata[0]} <br> Construction Cost: %{customdata[1]} <br> Neighborhood: %{customdata[3]}, ")
+st.plotly_chart(fig, use_container_width=True)
+
+
+options = st.multiselect(
+     'Select a Neighborhood',
+     data['Neighborhoods - Analysis Boundaries'].sort_values().unique()
+     )
+
+fig1 = go.Figure()
+fig1.update_xaxes(title_text="Estimated Construction Cost Log10")
+fig1.update_yaxes(title_text="Number of buildings")
+
+for neighborhood in options:
+
+    data_filter = data[data['Neighborhoods - Analysis Boundaries'] == neighborhood]
+
+    fig1.add_trace(
+        go.Histogram(
+            x = data_filter['Est_Cost_Infl_log10'],
+            nbinsx = 25,
+            name=neighborhood)
+    )
+
+# Overlay histograms
+fig1.update_layout(barmode='overlay')
+# Reduce opacity to see both histograms
+fig1.update_traces(opacity=0.75)
+st.plotly_chart(fig1, use_container_width=True)
 
 
 ### Footer 
