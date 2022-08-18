@@ -1,0 +1,13 @@
+numpy
+pandas
+matplotlib
+seaborn
+plotly
+geopy
+geopy[aiohttp]
+cpi==1.0.5
+scikit-learn == 1.0.2
+xgboost
+lightgbm
+pipenv
+scipy
