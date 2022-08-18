@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import requests
+from geopy.geocoders import Nominatim
 import plotly.express as px 
 import plotly.graph_objects as go
 import joblib
@@ -10,6 +12,9 @@ from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import RobustScaler,OneHotEncoder, StandardScaler
+
+ENDPOINT_NOMINATIM =  'https://nominatim.openstreetmap.org/'
+
 
 ### Config
 st.set_page_config(
@@ -25,68 +30,127 @@ st.caption("Data was lastly collected on August 10th 2022")
 st.markdown("---")
 #@st.cache
 
+# Constants
+
+STREET_SUFFIX = [' ', 'Al', 'Av', 'Blvd', 'Circle', 'Ct', 'Dr', 'Hy', 'Ln', 'Pk', 'Pl', 'Rd', 'St', 'Street', 'Terrace', 'Wy']
+
+ZIPCODE = ['94102', '94103', '94105', '94107', '94108', '94109', '94110', '94111', '94112', '94114',
+        '94115', '94116', '94117', '94118', '94121', '94122', '94123', '94124', '94127', '94130',
+        '94131', '94132', '94133', '94134', '94158']
+
+NEIGHBORHOOD = []
+
+# Functions ()
+get_permit_type = lambda x: 1 if x == 'New Construction' else 2
+
+def get_construction_type (construction_type):
+    """ 
+        Return the construction type as string
+    """
+    if construction_type == 'Fire resistive':
+        return '1'
+    elif construction_type == 'Non-combustible':
+        return '2'
+    elif construction_type == 'Ordinary':
+        return '3'
+    elif construction_type == 'Heavy timber':
+        return '4'
+    elif construction_type == 'Wood-framed':
+        return '5'
+    else:
+        return '99'
+
+def get_coordinates(address):
+    """
+        Return the product of lat and lon coordinates
+        type : list of float
+    """
+
+    geometry = requests.get(ENDPOINT_NOMINATIM + 'search', params={'q':address, 'format': 'geojson'}).json()['features'][0]['geometry']
+    coordinates = geometry['coordinates']
+    print(coordinates)
+    return coordinates
+
 ### User inputs
 st.subheader("Please select the details of your construction project below.")
 col1, col2 = st.columns(2)
 
-
 with col1:
     with st.form('Building geometry'):
-        type_use= st.selectbox('Type of use', ['1 family dwelling', '2 family dwelling', 'apartments'],key=1)
-        n_story= st.slider(label='Select number of stories', min_value=0, max_value=15, key=2)
-        n_units= st.text_input(label='Number of units',key=3)
-        n_year= st.slider(label='Select start year', min_value=2020, max_value=2035, key=4)
-        submitted1 = st.form_submit_button('Submit 1')
+        permit_type = st.selectbox('Permit Type', ['New Construction', 'New Construction Wood Frame'],key=1)
+        type_construction =  st.selectbox('Construction type', ['Ordinary', 'Fire resistive', 'Non-combustible', 'Heavy timber', 'Wood-framed','Other'], key=2) #need to replace 99
+        type_use= st.selectbox('Type of use', ['1 family dwelling', '2 family dwelling', 'apartments'],key=3)
+        n_story = st.number_input(label='Number of stories', min_value= 0, max_value=15, step = 1, key=4)
+        n_units = st.number_input(label='Number of proposed units', min_value= 1, max_value=200, step = 1, key=5)
+        t_duration= st.text_input(label='Estimated construction duration (Days)',key=6) #need to delete
+
+        submitted1 = st.form_submit_button('Confirm')
 
 with col2:
     with st.form('Form2'):
-        t_duration= st.text_input(label='Estimated construction duration in days',key=5) #need to delete
-        type_construction =  st.selectbox('Construction type', ['1', '2', '3', '4', '5','99'], key=6) #need to replace 99
-        type_permit = st.slider(label='Permit Type', min_value=1, max_value=2, key=7)
-        lon = st.text_input(label='Enter longitude',key=8)
-        lat = st.text_input(label='Enter latitude',key=9)
-        submitted2 = st.form_submit_button('Submit 2')
+        street_number = st.number_input(label='Street number', value= 999, step = 1, key=7)
+        street_name = st.text_input(label='Street name', key=8)
+        street_suffix = st.selectbox('Street suffix (optional)', STREET_SUFFIX, key=9)
+        zipcode = st.selectbox('Zipcode', ZIPCODE, key=10)
+        n_year= st.slider(label='Select start year', min_value=2020, max_value=2035, step = 1, key=11)
+        submitted2 = st.form_submit_button('Confirm')
 
 	
 st.markdown("---")
 
 if submitted2:
-         data_load_state = st.text('Loading results...')
-	#inputs
+    data_load_state = st.text('Loading results...')
 
-         lat_lon = float(lat)  * float(lon)
+    ## don't remove spaces inside [', San Francisco, CA '] and ' ' between variables, it's importante
+    address = str(street_number) + ' ' + street_name + ' ' + street_suffix + ', San Francisco, CA ' + zipcode
+    coordinates = get_coordinates(address)
+    lat_lon = coordinates[0] * coordinates[1] # lat * lon
+
+
+    project_detail = {'Permit Type' : [permit_type], 
+                'Proposed Units' : [n_units],
+                'Proposed Use_': [type_use],
+                'Duration_construction_days': [t_duration],
+                'Number of Proposed Stories_': [n_story] ,
+                'Year': [n_year],
+                'Proposed Construction Type_': [type_construction],
+                'address': [address],
+                'lat_lon': [coordinates]
+                }
+    
 
 	# Attn: Don't forget to change cols and types if you change your model
-         cols = ['Permit Type', 'Proposed Units', 'Proposed Use_',
-		       'Duration_construction_days', 'Number of Proposed Stories_', 'Year',
-		       'Proposed Construction Type_', 'lat_lon']
+    cols = ['Permit Type', 'Proposed Units', 'Proposed Use_',
+		    'Duration_construction_days', 'Number of Proposed Stories_',
+            'Year', 'Proposed Construction Type_', 'lat_lon'
+            ]
 
-         val_dict = {'Permit Type' : [int(type_permit)], 
+    val_dict = {'Permit Type' : [get_permit_type(permit_type)], 
          	    'Proposed Units' : [float(n_units)],
-		    'Proposed Use_': [str(type_use)],
-		    'Duration_construction_days': [float(t_duration)],
-		    'Number of Proposed Stories_': [float(n_story)] ,
-		    'Year': [int(n_year)],
-		    'Proposed Construction Type_': [str(type_construction)], 
-		    'lat_lon':[float(lat_lon)]}
+		        'Proposed Use_': [type_use],
+		        'Duration_construction_days': [float(t_duration)],
+		        'Number of Proposed Stories_': [float(n_story)] ,
+		        'Year': [n_year],
+		        'Proposed Construction Type_': [get_construction_type(type_construction)], 
+		        'lat_lon':[lat_lon]}
 
-         X_val= pd.DataFrame(val_dict)
-	# load the model from disk
-         prepro_fn = 'prepro.joblib'#preprocessing model
-         model_fn  ='model.joblib'#random forest model
-         loaded_prepro = joblib.load(prepro_fn)
-         loaded_model = joblib.load(model_fn)
+    X_val= pd.DataFrame(val_dict)
+    # load the model from disk
+    prepro_fn = 'prepro.joblib'#preprocessing model
+    model_fn  ='model.joblib'#random forest model
+    loaded_prepro = joblib.load(prepro_fn)
+    loaded_model = joblib.load(model_fn)
 
-         X_val = loaded_prepro.transform(X_val)
-         Y_pred = loaded_model.predict(X_val)
+    X_val = loaded_prepro.transform(X_val)
+    Y_pred = loaded_model.predict(X_val)
 
-         Y_pred_lin = int(10**Y_pred)
+    Y_pred_lin = int(10**Y_pred)
 
-	### Print the results
-         st.subheader("Results 💸💰🏷")
-         st.subheader('Your project details')
-         st.write(pd.DataFrame(val_dict)) 
-         st.subheader(f'➡️Estimated cost for your construction project is {Y_pred_lin} dollars.')
+    ### Print the results
+    st.subheader("Results 💸💰🏷")
+    st.subheader('Your project details')
+    st.write(pd.DataFrame(project_detail)) 
+    st.subheader(f'➡️Estimated cost for your construction project is {Y_pred_lin} dollars.')
 
 st.markdown("""
 	    The model is still in full development. Check back here again!
