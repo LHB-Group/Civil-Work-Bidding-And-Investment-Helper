@@ -37,7 +37,7 @@ ZIPCODE = ['94102', '94103', '94105', '94107', '94108', '94109', '94110', '94111
 NEIGHBORHOOD = []
 
 # Functions ()
-get_permit_type = lambda x: 1 if x == 'New Construction' else 2
+get_permit_type = lambda x: 1 if x == 'New Construction (Reinforced concrete, Steel, etc...)' else 2
 
 def get_construction_type (construction_type):
     """ 
@@ -76,26 +76,25 @@ st.markdown("San Francisco is a hyper popular city with high housing demands. Ma
 ### User inputs
 st.subheader("Please select the details of your construction project below.")
 col1, col2, col3 = st.columns([1.5, 4, 1.5])
-with col2.form('Form1'):
-        permit_type = st.selectbox('Permit Type', ['New Construction', 'New Construction Wood Frame'],key=1)
-        type_construction =  st.selectbox('Construction type', ['Ordinary', 'Fire resistive', 'Non-combustible', 'Heavy timber', 'Wood-framed','Other'], key=2) #need to replace 99
+with col2.form('Form'):
+        permit_type = st.selectbox('Permit Type', ['New Construction (Reinforced concrete, Steel, etc...)', 'New Construction Wood Frame'],key=1)
+        type_construction =  st.selectbox('Construction type', ['Ordinary', 'Fire resistive', 'Non-combustible', 'Heavy timber', 'Wood-framed','Other'], key=2)
         type_use= st.selectbox('Type of use', ['1 family dwelling', '2 family dwelling', 'apartments'],key=3)
         st.markdown("---")
         n_story = st.number_input(label='Number of stories', min_value= 0, max_value=15, step = 1, key=4)
         n_units = st.number_input(label='Number of proposed units', min_value= 1, max_value=200, step = 1, key=5)
-        t_duration= st.text_input(label='Estimated construction duration (Days)',key=6) #need to delete
+        building_footprint_area = st.number_input(label='Building ground surface area (m²)',min_value= 1.0, key=6)
         st.markdown("---")
-        street_number = st.number_input(label='Street number', value= 999, step = 1, key=7)
-        street_name = st.text_input(label='Street name', key=8)
+        street_number = st.number_input(label='Street number', value=2640, step = 1, key=7)
+        street_name = st.text_input(label='Street name', value='Steiner', key=8)
         street_suffix = st.selectbox('Street suffix (optional)', STREET_SUFFIX, key=9)
         zipcode = st.selectbox('Zipcode', ZIPCODE, key=10)
-        n_year= 2022#st.slider(label='Select start year', min_value=2020, max_value=2035, step = 1, key=11)
-        submitted1 = st.form_submit_button('Confirm')
+        submitted = st.form_submit_button('Confirm')
 
 	
 st.markdown("---")
 coordinates = '' #using this line for zooming map in the if statement below
-if submitted1 :
+if submitted :
     data_load_state = st.text('Loading results...')
 
     ## don't remove spaces inside [', San Francisco, CA '] and ' ' between variables, it's importante
@@ -105,37 +104,34 @@ if submitted1 :
 
 
     project_detail = {'Permit Type' : [permit_type], 
-                'Proposed Construction Type_': [type_construction],
-                'Proposed Use_': [type_use],
-                'Number of Proposed Stories_': [n_story] ,
-                'Proposed Units' : [n_units],
-                'Duration_construction_days': [t_duration],
-                'address': [address],
-                'lat_lon': [coordinates],
-                'Year': [n_year]
-                }
+        'Proposed Construction Type_': [type_construction],
+        'Proposed Use': [type_use],
+        'Number of Proposed Stories_': [n_story] ,
+        'Proposed Units' : [n_units],
+        'address': [address],
+        'lat_lon': [coordinates],
+        'total_area_m2': [building_footprint_area * n_story]
+        }
     
 
 	# Attn: Don't forget to change cols and types if you change your model
     cols = ['Permit Type', 'Proposed Units', 'Proposed Use_',
-		    'Duration_construction_days', 'Number of Proposed Stories_',
-            'Year', 'Proposed Construction Type_', 'lat_lon'
+		    'Number of Proposed Stories_','Proposed Construction Type_', 'lat_lon', 'total_area_m2'
             ]
 
     val_dict = {'Permit Type' : [get_permit_type(permit_type)], 
 		        'Proposed Construction Type_': [get_construction_type(type_construction)], 
-		        'Proposed Use_': [type_use],
+		        'Proposed Use': [type_use],
 		        'Number of Proposed Stories_': [float(n_story)] ,
          	    'Proposed Units' : [float(n_units)],
-		        'Duration_construction_days': [float(t_duration)],
 		        'lat_lon':[lat_lon],
-		        'Year': [n_year]
+                'total_area_m2': [building_footprint_area * n_story]
                 }
 
     X_val= pd.DataFrame(val_dict)
     # load the model from disk
-    prepro_fn = 'prepro.joblib'#preprocessing model
-    model_fn  ='model.joblib'#random forest model
+    prepro_fn = 'finalprepro.jolib'#preprocessing model
+    model_fn  ='finalmodel.jolib'#random forest model
     loaded_prepro = joblib.load(prepro_fn)
     loaded_model = joblib.load(model_fn)
 
