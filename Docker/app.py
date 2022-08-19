@@ -151,7 +151,8 @@ if submitted1 :
     estimated_cost = re.sub(r'(?<!^)(?=(\d{3})+$)', r' ', str(Y_pred_lin))
     st.subheader("Estimated cost for your construction project is :\n")
     st.subheader(f"➡️ {estimated_cost} 💲")
-
+    st.markdown("We used Random Forest Model for the prediction.🌲🌳🌲🌳🌲")
+    st.markdown("For this model, RMSLE score is 0.18 and R2 score is 0.85. 🧠🤖")
 #DATA ANALYSIS PART
 if st.checkbox('Show data visualization'):
 
@@ -234,17 +235,16 @@ if st.checkbox('Show data visualization'):
         zoom = 12.5,
         center = {'lat': LAT_0, 'lon': LON_0}, 
         color='Construction Cost ($) in Log10',
-        title = 'Nearby construction projects completed since early 1980s',
+        title = 'Nearby construction projects completed since early 1980s. Your project is within the green circle.',
         mapbox_style="stamen-toner",
         color_continuous_scale='thermal',
-        labels={"Neighborhoods": "Neighborhoods - Analysis Boundaries"},
         opacity = 0.7,
         height = 700,
-        custom_data=['Permit Type', 'Est_Cost_Infl', 'Completed Date', 'Neighborhoods - Analysis Boundaries']
+        custom_data=['Number of Proposed Stories', 'Est_Cost_Infl', 'Completed Date', 'Neighborhoods - Analysis Boundaries']
         )
 
     fig.update_layout(hovermode="closest", mapbox_layers=layers)
-    fig.update_traces(hovertemplate="Type of Permit:  %{customdata[0]} <br> Construction Cost ($): %{customdata[1]} <br> Neighborhood: %{customdata[3]} <br> Completion Date:  %{customdata[2]}")
+    fig.update_traces(hovertemplate="Neighborhood: %{customdata[3]} <br> Number of Stories:  %{customdata[0]} <br> Construction Cost ($): %{customdata[1]} <br> Completion Date:  %{customdata[2]}")
 
 
     st.plotly_chart(fig, use_container_width=True)
