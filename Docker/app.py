@@ -194,6 +194,7 @@ if st.checkbox('Show data visualization'):
     mask2 = (data['lat']<LON_0*.9997) & (data['lat']>LON_0*1.0003) 
     mask_t = mask1 & mask2
     data1 = data.loc[mask_t,:]
+    data1['Construction Cost ($) in Log10']=data1['Est_Cost_Infl_log10']
     #Let's map all construction projects in a map
     #px.set_mapbox_access_token(ACCESS_TOKEN)
     ## Run the below code if the check is checked ✅
@@ -232,7 +233,7 @@ if st.checkbox('Show data visualization'):
         lon="lat",
         zoom = 12.5,
         center = {'lat': LAT_0, 'lon': LON_0}, 
-        color='Est_Cost_Infl_log10',
+        color='Construction Cost ($) in Log10',
         title = 'Nearby construction projects completed since early 1980s',
         mapbox_style="stamen-toner",
         color_continuous_scale='thermal',
@@ -292,20 +293,21 @@ if st.checkbox('Show data visualization'):
     l_neighs = data['Neighborhoods - Analysis Boundaries'].sort_values().unique()
     container = st.container()
     all = st.checkbox("Select all")
- 
     if all:
      options = container.multiselect('Select one or more neighborhoods',
         l_neighs, l_neighs)
     else:
      options =  container.multiselect('Select one or more neighborhoods',
         l_neighs)
-
+    m_out0 = data['Est_Cost_Infl_log10'] >= data['Est_Cost_Infl_log10'].quantile(0.01)
+    m_out1 = data['Est_Cost_Infl_log10'] <= data['Est_Cost_Infl_log10'].quantile(0.99)
+    data2 = data.loc[m_out0&m_out1,:]
     fig1 = go.Figure()
-    fig1.update_xaxes(title_text="Estimated Construction Cost Log10")
+    fig1.update_xaxes(title_text="Construction Cost in Log10")
     fig1.update_yaxes(title_text="Number of buildings")
     for neighborhood in options:
 
-        data_filter = data[data['Neighborhoods - Analysis Boundaries'] == neighborhood]
+        data_filter = data2[data['Neighborhoods - Analysis Boundaries'] == neighborhood]
 
         fig1.add_trace(
             go.Histogram(
@@ -322,18 +324,13 @@ if st.checkbox('Show data visualization'):
 
 st.markdown("---")
 st.markdown("""
-	    The model is still in full development. Check back here again!
+	    The model is still in full development. Check back here again!\n
 	    If you like it ❤️, thanks for sharing it with your network and friends! 
 	""")
 st.markdown("---")
 ### Footer 
-empty_space, footer = st.columns([1, 2])
 
-with empty_space:
-    st.write("")
-
-with footer:
-    st.markdown("""
+st.markdown("""
         🍇
         If you wish to learn more about our project, \ncheck this link [Github link](https://github.com/LHB-Group/Civil-Work-Bidding-And-Investment-Helper) 📖
     """)    
