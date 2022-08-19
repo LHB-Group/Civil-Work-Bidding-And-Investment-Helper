@@ -179,3 +179,28 @@ Thu Aug 18 15:48:24 2022,dataset V8 | default feature used + total_area_m2 + Nei
               objective='regression')",0.161,0.021,https://drive.google.com/uc?id=1Ffbhy12m4JG9REEdSQwwewIFE0KUiEX3,"(6575, 62)",Est_Cost_Infl_log10,"['Proposed Use', 'Proposed Construction Type_', 'Neighborhoods - Analysis Boundaries']","['Permit Type', 'Number of Proposed Stories_', 'Proposed Units', 'lat_lon', 'Year', 'Duration_construction_days', 'total_area_m2']",0,4,[0.13554034 0.14600696 0.18102654 0.18124406],[0.83586672 0.83245019 0.8607001  0.8779819 ],[0.02044376 0.02154605 0.02576463 0.02573241],[0.01797053 0.01843913 0.02281784 0.02147741],[0.83832109 0.83285834 0.86386703 0.88072314]
 Thu Aug 18 15:51:08 2022,dataset V8 | default feature used + total_area_m2 + Neighborhoods | Hicham,"RandomForestRegressor(max_depth=16, min_samples_leaf=2, min_samples_split=8,
                       n_estimators=140, random_state=0)",0.154,0.025,https://drive.google.com/uc?id=1Ffbhy12m4JG9REEdSQwwewIFE0KUiEX3,"(6575, 62)",Est_Cost_Infl_log10,"['Proposed Use', 'Proposed Construction Type_', 'Neighborhoods - Analysis Boundaries']","['Permit Type', 'Number of Proposed Stories_', 'Proposed Units', 'lat_lon', 'Year', 'Duration_construction_days', 'total_area_m2']",0,4,[0.11683695 0.14870401 0.17887356 0.17350676],[0.8780393  0.82620303 0.86399383 0.88817743],[0.01730926 0.02207174 0.02546382 0.02476467],[0.01543627 0.01774236 0.02091118 0.01946614],[0.87824632 0.82724038 0.86666585 0.8882441 ]
+Fri Aug 19 10:33:18 2022,dataset V8 | tunning XGBoost and RandomForestRegressor hyperparameters | Baptiste,"XGBRegressor(base_score=0.5, booster='gbtree', callbacks=None,
+             colsample_bylevel=1, colsample_bynode=1, colsample_bytree=0.5,
+             early_stopping_rounds=None, enable_categorical=False,
+             eval_metric=None, gamma=0.4, gpu_id=-1, grow_policy='depthwise',
+             importance_type=None, interaction_constraints='',
+             learning_rate=0.05, max_bin=256, max_cat_to_onehot=4,
+             max_delta_step=0, max_depth=200, max_leaves=0,
+             min_child_weight=1.5, missing=nan, monotone_constraints='()',
+             n_estimators=2000, n_jobs=-1, nthread=-1, num_parallel_tree=1,
+             predictor='auto', random_state=0, reg_alpha=0.464, ...)",0.164,0.008,https://drive.google.com/uc?id=1Ffbhy12m4JG9REEdSQwwewIFE0KUiEX3,"(178, 775)",Est_Cost_Infl_log10,[],"['Duration_construction_days', 'Proposed Units', 'Number of Proposed Stories', 'Year', 'lat_lon', 'Proposed Use_f', 'Proposed Construction Type_f', 'Zipcode_', 'Permit Type', 'total_area_m2']",0,4,[0.1622582  0.15436401 0.16379385 0.17648927],[0.84878846 0.89684321 0.8317996  0.81656193],[0.0238296  0.02220257 0.02377901 0.02553105],[0.02054519 0.02025921 0.02021656 0.02151409],[0.84882089 0.89692017 0.8318317  0.81667817]
+Fri Aug 19 10:33:29 2022,dataset V8 | tunning XGBoost and RandomForestRegressor hyperparameters | Baptiste,"RandomForestRegressor(max_depth=100, min_samples_split=4, n_estimators=200,
+                      random_state=0)",0.154,0.004,https://drive.google.com/uc?id=1Ffbhy12m4JG9REEdSQwwewIFE0KUiEX3,"(178, 775)",Est_Cost_Infl_log10,[],"['Duration_construction_days', 'Proposed Units', 'Number of Proposed Stories', 'Year', 'lat_lon', 'Proposed Use_f', 'Proposed Construction Type_f', 'Zipcode_', 'Permit Type', 'total_area_m2']",0,4,[0.15781949 0.14992574 0.14941339 0.1585736 ],[0.85694835 0.90268986 0.86003776 0.8519138 ],[0.02313379 0.02173572 0.02175356 0.02286877],[0.018348   0.01801832 0.01735068 0.01708604],[0.85700231 0.9029972  0.86004722 0.85191387]
+Fri Aug 19 12:10:08 2022,dataset V8 | result XGBoost and RandomForestRegressor | Baptiste,"XGBRegressor(base_score=None, booster=None, callbacks=None,
+             colsample_bylevel=None, colsample_bynode=None,
+             colsample_bytree=0.8, early_stopping_rounds=None,
+             enable_categorical=False, eval_metric=None, gamma=0.4, gpu_id=None,
+             grow_policy=None, importance_type=None,
+             interaction_constraints=None, learning_rate=0.1, max_bin=None,
+             max_cat_to_onehot=None, max_delta_step=None, max_depth=25,
+             max_leaves=None, min_child_weight=1.5, missing=nan,
+             monotone_constraints=None, n_estimators=400, n_jobs=None,
+             nthread=-1, num_parallel_tree=None, predictor=None, random_state=0,
+             reg_alpha=1.2, ...)",0.16,0.02,https://drive.google.com/uc?id=1Ffbhy12m4JG9REEdSQwwewIFE0KUiEX3,"(6575, 62)",Est_Cost_Infl_log10,[],"['Permit Type', 'Proposed Units', 'Proposed Use_f', 'Duration_construction_days', 'Number of Proposed Stories_', 'Year', 'Proposed Construction Type_f', 'lat_lon']",0,4,[0.13819431 0.14066286 0.18303713 0.17676246],[0.82937612 0.84449094 0.85758861 0.88394156],[0.02088698 0.02082582 0.02613421 0.02508823],[0.01806786 0.01751169 0.02259691 0.02106599],[0.83168457 0.84461678 0.86153984 0.88395094]
+Fri Aug 19 12:10:44 2022,dataset V8 | result XGBoost and RandomForestRegressor | Baptiste,"RandomForestRegressor(max_depth=100, min_samples_split=4, n_estimators=200,
+                      random_state=0)",0.156,0.024,https://drive.google.com/uc?id=1Ffbhy12m4JG9REEdSQwwewIFE0KUiEX3,"(6575, 62)",Est_Cost_Infl_log10,[],"['Permit Type', 'Proposed Units', 'Proposed Use_f', 'Duration_construction_days', 'Number of Proposed Stories_', 'Year', 'Proposed Construction Type_f', 'lat_lon']",0,4,[0.12150701 0.14753302 0.18350179 0.17296325],[0.86809471 0.82892945 0.85686464 0.8888769 ],[0.01801824 0.02181032 0.02611852 0.02458965],[0.01554583 0.01723223 0.02114252 0.01841112],[0.86810954 0.82902631 0.86013208 0.88901397]

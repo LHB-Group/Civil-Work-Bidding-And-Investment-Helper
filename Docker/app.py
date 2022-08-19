@@ -72,8 +72,8 @@ if submitted2:
 
          X_val= pd.DataFrame(val_dict)
 	# load the model from disk
-         prepro_fn = 'prepro.joblib'#preprocessing model
-         model_fn  ='model.joblib'#random forest model
+         prepro_fn = 'finalprepro.joblib'#preprocessing model
+         model_fn  ='finalmodel.joblib'#random forest model
          loaded_prepro = joblib.load(prepro_fn)
          loaded_model = joblib.load(model_fn)
 
