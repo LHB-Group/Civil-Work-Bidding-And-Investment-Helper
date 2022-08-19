@@ -6,4 +6,6 @@ dataFrameSerialization = "legacy"
 
 [theme]
 base="dark"
-primaryColor="#4be8e0"
+primaryColor="#F63366"
+secondaryBackgroundColor="#262e40"
+font="sans serif"

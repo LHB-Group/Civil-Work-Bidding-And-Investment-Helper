@@ -3,3 +3,8 @@
  joblib
  plotly
  streamlit
+ numpy
+ Pillow
+ geopy
+ requests
+ regex
