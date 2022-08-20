@@ -1,20 +1,13 @@
+from PIL import Image
 import streamlit as st
 import pandas as pd
+import numpy as np
 import requests
 import re
 from geopy.geocoders import Nominatim
+import joblib
 import plotly.express as px 
 import plotly.graph_objects as go
-import joblib
-import sklearn
-from sklearn.ensemble import RandomForestRegressor,  GradientBoostingRegressor
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.pipeline import Pipeline, make_pipeline
-from sklearn.impute import SimpleImputer
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import RobustScaler,OneHotEncoder, StandardScaler
-import numpy as np
-from PIL import Image
 
 ENDPOINT_NOMINATIM =  'https://nominatim.openstreetmap.org/'
 
@@ -54,7 +47,7 @@ def get_construction_type (construction_type):
     elif construction_type == 'Wood-framed':
         return '5'
     else:
-        return '99'
+        return 'Other'
 
 def get_coordinates(address):
     """
@@ -65,52 +58,77 @@ def get_coordinates(address):
     geometry = requests.get(ENDPOINT_NOMINATIM + 'search', params={'q':address, 'format': 'geojson'}).json()['features'][0]['geometry']
     coordinates = geometry['coordinates']
     return coordinates
+
+def money_textf (dollar):
+    """
+        Return a string styled for showing money xx xxx xxx
+        type : float or integer
+    """
+    return re.sub(r'(?<!^)(?=(\d{3})+$)', r' ', str(int(dollar)))
 ### App
 st.title('San Francisco Construction Project Cost Estimator 🌉🏗️ 💸')
 ## Loading Image and Text
 image = Image.open('SF_view.png')
 col1, col2, col3 = st.columns([1.5, 5, 1.5])
 col2.image(image, caption='Skyline of San Francisco (Credit: GettyImages)')
-st.markdown("👋 Hello there! Welcome to this app to estimate cost of your construction project on your future houses or appartment buildings.")
-st.markdown("San Francisco is a hyper popular city with high housing demands. Many investors are also into traditional ways to invest their money by chosing construction projects that would have high return rate particulary in San Francisco. We use the building permit data of San Francisco since early 1980s to today apply **most recent machine learning algorithms**. Data comes from the website of San Francisco Open Data.")
+st.markdown("👋 Hello there and welcome here! I am an AI-powered app 🧠🤖 to estimate cost of construction projects in San Francisco.")
+st.markdown("San Francisco is a hyper-popular city with high housing demands. Many investors consider construction projects to invest in, which can provide high return rate particulary in San Francisco.")
+st.markdown("For engineering companies, it is super important to win biddings on construction projects. Engineers need to predict the project cost as accurately as possible. If project cost is **under estimated**, an engineering company spends money from the pocket and **looses** money. If project cost is **over estimated**, an engineering company can **loose** bidding to a rival in such a competitive market.")
+st.markdown("Based on machine learning algorithms, I am here to help you estimate **your construction cost** on your future housing or appartment projects in San Francisco, California. ✅☑️ 🌉 🏗️ 💸 ")
+st.markdown("I have been trained with historical construction projects in San Francisco. The data comes from building permit data of San Francisco available since early 1980s. Hey, these data are public thanks to the website of datasf.org.")
+st.markdown("")
+st.markdown("Technical term alert 🧐 Among the machine learning models (Linear,Lasso model, E-Net, KRidge, GBoosting, XGBoost, LGBoost and Random Forest), I perform best with **Random Forest Model**🌲🌳🌲🌳. ")
+st.markdown("")
+st.markdown("🚀 Let's start 🚀")
+st.markdown("---")
 ### User inputs
-st.subheader("Please select the details of your construction project below.")
-col1, col2, col3 = st.columns([1.5, 4, 1.5])
-with col2.form('Form'):
+st.subheader("Tell me about your construction project 🏗️ 👷 🚧")
+col1, col2,col3 = st.columns([1,1,1])
+with st.form('Form'):
+    with col1 :
         permit_type = st.selectbox('Permit Type', ['New Construction (Reinforced concrete, Steel, etc...)', 'New Construction Wood Frame'],key=1)
-        type_construction =  st.selectbox('Construction type', ['Ordinary', 'Fire resistive', 'Non-combustible', 'Heavy timber', 'Wood-framed','Other'], key=2)
+        type_construction =  st.selectbox('Construction type', ['Ordinary', 'Fire resistive','Wood-framed','Other'], key=2)
         type_use= st.selectbox('Type of use', ['1 family dwelling', '2 family dwelling', 'apartments'],key=3)
-        st.markdown("---")
+        st.markdown("Check out the official webpage of [SF.gov](https://sf.gov/topics/building) for more details on the categories above.")
+    with col2 :
+ 
         n_story = st.number_input(label='Number of stories', min_value= 0, max_value=15, step = 1, key=4)
         n_units = st.number_input(label='Number of proposed units', min_value= 1, max_value=200, step = 1, key=5)
         building_footprint_area = st.number_input(label='Building ground surface area (m²)',min_value= 1.0, key=6)
-        st.markdown("---")
+
+    with col3:
         street_number = st.number_input(label='Street number', value=2640, step = 1, key=7)
         street_name = st.text_input(label='Street name', value='Steiner', key=8)
         street_suffix = st.selectbox('Street suffix (optional)', STREET_SUFFIX, key=9)
         zipcode = st.selectbox('Zipcode', ZIPCODE, key=10)
-        submitted = st.form_submit_button('Confirm')
+    submitted = st.form_submit_button('Confirm')
 
 	
 st.markdown("---")
 coordinates = '' #using this line for zooming map in the if statement below
+Y_pred=''#using this for the histogram
 if submitted :
     data_load_state = st.text('Loading results...')
 
     ## don't remove spaces inside [', San Francisco, CA '] and ' ' between variables, it's importante
     address = str(street_number) + ' ' + street_name + ' ' + street_suffix + ', San Francisco, CA ' + zipcode
-    coordinates = get_coordinates(address)
+    try :
+        coordinates = get_coordinates(address)
+    except:
+        st.subheader('⚠️Please enter a valid adress in San Francisco⚠️')
+        raise
+        #coordinates = [-122.431000, 37.750000]  #san francisco central coord.]
     lat_lon = coordinates[0] * coordinates[1] # lat * lon
 
 
     project_detail = {'Permit Type' : [permit_type], 
-        'Proposed Construction Type_': [type_construction],
-        'Proposed Use': [type_use],
-        'Number of Proposed Stories_': [n_story] ,
-        'Proposed Units' : [n_units],
-        'address': [address],
-        'lat_lon': [coordinates],
-        'total_area_m2': [building_footprint_area * n_story]
+        'Construction Type': [type_construction],
+        'Type of Use': [type_use],
+        'Number of Stories': [n_story] ,
+        'Number of Units' : [n_units],
+        'Total area (m²)': [building_footprint_area * n_story],
+        'Address': [address],
+        'Lon, Lat': [coordinates]
         }
     
 
@@ -142,39 +160,33 @@ if submitted :
 
     ### Print the results
     st.subheader("Results 💸💰🏷")
-    st.subheader('Your project details')
+    st.subheader('Your project details:')
     st.write(pd.DataFrame(project_detail)) 
-    estimated_cost = re.sub(r'(?<!^)(?=(\d{3})+$)', r' ', str(Y_pred_lin))
-    st.subheader("Estimated cost for your construction project is :\n")
-    st.subheader(f"➡️ {estimated_cost} 💲")
-    st.markdown("We used Random Forest Model for the prediction.🌲🌳🌲🌳🌲")
-    st.markdown("For this model, RMSLE score is 0.18 and R2 score is 0.85. 🧠🤖")
+    st.subheader("Estimated cost for your construction project:\n")
+    st.subheader(f"➡️ {money_textf(Y_pred_lin)} 💲")
+    st.markdown("The cost represents the value of dollar in 2022.")
+    st.markdown('---')
 #DATA ANALYSIS PART
-if st.checkbox('Show data visualization'):
-
-    st.title('Data Analysis')
-    #MASKING DATA CLOSE TO OUR INTEREST
+    st.subheader('More about previous construction projects 🗄️ 🏗️ 🌉')
+#fixing central point of map
+    LAT_0 , LON_0 = 37.80102807967815, -122.4122826364495 #random san francisco coord.
+    if len(coordinates)>0: #focusing on the address
+        LAT_0 , LON_0 = coordinates[1], coordinates[0]
 
     ###LINK TO DATABASE
-    db_v1= 'https://drive.google.com/file/d/1KdnyrBgasjIcO7wkgbqi0RST5igM1jNv/view?usp=sharing'
-    db_v2= 'https://drive.google.com/file/d/1XoqPujIOGHQStuAqM6Gzyqbkha4c5Y96/view?usp=sharing'
-    db_v3 = 'https://drive.google.com/file/d/1W1V3_hl7yqbWyXF8w7mZSDTxCOx3GMzf/view?usp=sharing'
-    db_v4 = 'https://drive.google.com/file/d/19ERs5bmAdxEfgUmTxgfIBhUoT6xPHzZy/view?usp=sharing'
-    db_v4b = 'https://drive.google.com/file/d/12wWwWzT61CE82CHhheBWswMZ9ZYuZDFz/view?usp=sharing' 
-    db_v5 = 'https://drive.google.com/file/d/1JSHTegHKvchjXDe4SkFzR07iRNVbZU5K/view?usp=sharing'
-    db_v8 = 'https://drive.google.com/file/d/1Ffbhy12m4JG9REEdSQwwewIFE0KUiEX3/view?usp=sharing'
-    fname = db_v4
-    DATA_URL = 'https://drive.google.com/uc?id=' + fname.split('/')[-2]
-
+    #db_v4 = 'https://drive.google.com/file/d/xxxx/view?usp=sharing'
+    #fname = db_v4
+    #DATA_URL = 'https://drive.google.com/uc?id=' + fname.split('/')[-2]
+    DATA_URL = "Building_Permits_v4.csv"
     # Use `st.cache` when loading data is extremly useful
     # because it will cache your data so that your app 
     # won't have to reload it each time you refresh your app
-    @st.cache
+    @st.cache(allow_output_mutation=True)
     def load_data():
         name_cols = ['Zipcode','Est_Cost_Infl_log10','lon','lat','Number of Proposed Stories',
                     'Permit Type', 'Est_Cost_Infl', 'Completed Date', 'Neighborhoods - Analysis Boundaries']#read only these columns for faster app
         data = pd.read_csv(DATA_URL,usecols  = name_cols)
-        data['Est_Cost_Infl']=data['Est_Cost_Infl'].astype(int)
+        data['Est_Cost_Infl_styled']=data['Est_Cost_Infl'].apply(lambda x : money_textf(x))
         return data
 
     st.caption("Data was lastly collected on August 10th 2022")
@@ -182,11 +194,7 @@ if st.checkbox('Show data visualization'):
     data_load_state = st.text('Loading data ...')
     data = load_data()
     data_load_state.text("") # change text from "Loading data..." to "" once the the load_data function has run
-    st.markdown("---")
     
-    LAT_0 , LON_0 = 37.750000, -122.431000  #san francisco central coord.
-    if len(coordinates)>0: #focusing on the address
-        LAT_0 , LON_0 = coordinates[1], coordinates[0]
     mask1 = (data['lon']>LAT_0*.9995) & (data['lon']<LAT_0*1.0005)  #.sample(2000) #taking 2000 data only
     mask2 = (data['lat']<LON_0*.9997) & (data['lat']>LON_0*1.0003) 
     mask_t = mask1 & mask2
@@ -199,12 +207,12 @@ if st.checkbox('Show data visualization'):
         st.header('Raw data')
         st.write(data1)  
     
-    R = 0.005
+    R = 0.0015
     center_lon = LON_0
     center_lat = LAT_0
     t = np.linspace(0, 2*3.14, 100)
     circle_lon =center_lon + R*np.cos(t)
-    circle_lat =center_lat +  R*np.sin(t)
+    circle_lat =center_lat +  0.80*R*np.sin(t)
 
 
     coords=[]
@@ -217,34 +225,38 @@ if st.checkbox('Show data visualization'):
                                   "coordinates": coords
                                   }
                     },
-             color= 'green',
+             color= 'blue',
              type = 'line', 
              opacity =0.9,  
              line=dict(width=3.0)
             )]
             
     #FIGURE 1 - MAP
+    with open('.token_api') as f:
+        ACCESS_TOKEN = f.readlines()[0] 
+    px.set_mapbox_access_token(ACCESS_TOKEN)
     fig = px.scatter_mapbox(
         data1, 
         lat="lon",
         lon="lat",
-        zoom = 12.5,
+        zoom = 13.5,
         center = {'lat': LAT_0, 'lon': LON_0}, 
         color='Construction Cost ($) in Log10',
-        title = 'Nearby construction projects completed since early 1980s. Your project is within the green circle.',
-        mapbox_style="stamen-toner",
-        color_continuous_scale='thermal',
-        opacity = 0.7,
+        title = 'Nearby construction projects completed since early 1980s. Your project is within the blue circle.',
+        mapbox_style="outdoors",
+        color_continuous_scale='jet',
+        opacity = 0.9,
         height = 700,
-        custom_data=['Number of Proposed Stories', 'Est_Cost_Infl', 'Completed Date', 'Neighborhoods - Analysis Boundaries']
+        custom_data=['Number of Proposed Stories', 'Est_Cost_Infl_styled', 'Completed Date', 'Neighborhoods - Analysis Boundaries']
         )
 
-    fig.update_layout(hovermode="closest", mapbox_layers=layers)
+    fig.update_layout(hovermode="closest")
+    if len(coordinates)>0 :
+        fig.update_layout(mapbox_layers=layers)
     fig.update_traces(hovertemplate="Neighborhood: %{customdata[3]} <br> Number of Stories:  %{customdata[0]} <br> Construction Cost ($): %{customdata[1]} <br> Completion Date:  %{customdata[2]}")
 
-
     st.plotly_chart(fig, use_container_width=True)
-
+    st.markdown("Please note that the legend is in logarithmic 10. The numbers on the legend box represent the amount of zeros in project cost ($). For example, if log10(cost) is 5, it means 100 000 dollar.")
 
     st.markdown("---")
     #FIGURE 2
@@ -267,7 +279,7 @@ if st.checkbox('Show data visualization'):
     #data['Number of Proposed Stories']=data['Number of Proposed Stories'].astype(int)
     fig0 = px.histogram (data.sort_values(by= 'Number of Proposed Stories_cat'), x='Completed Date',
             title='Histogram of Completed Buildings in San Francisco',
-            opacity=0.8,
+            opacity=0.85,
             color='Number of Proposed Stories_cat',#"Permit Type Definition",
             hover_data=['Number of Proposed Stories']
             )
@@ -286,48 +298,43 @@ if st.checkbox('Show data visualization'):
     st.markdown("---")
 
     #FIGURE 3 - Histogram
-    l_neighs = data['Neighborhoods - Analysis Boundaries'].sort_values().unique()
-    container = st.container()
-    all = st.checkbox("Select all")
-    if all:
-     options = container.multiselect('Select one or more neighborhoods',
-        l_neighs, l_neighs)
-    else:
-     options =  container.multiselect('Select one or more neighborhoods',
-        l_neighs)
     m_out0 = data['Est_Cost_Infl_log10'] >= data['Est_Cost_Infl_log10'].quantile(0.01)
     m_out1 = data['Est_Cost_Infl_log10'] <= data['Est_Cost_Infl_log10'].quantile(0.99)
     data2 = data.loc[m_out0&m_out1,:]
-    fig1 = go.Figure()
+
+    fig1 = px.histogram (data2.sort_values(by = 'Neighborhoods - Analysis Boundaries'), 
+                   x='Est_Cost_Infl_log10',
+                   title='Histogram of Project Costs in San Francisco',
+                   opacity=0.85,
+                   color= 'Neighborhoods - Analysis Boundaries',
+                   nbins=10
+                   )    
+    if Y_pred !='': 
+        fig1.add_vline(x=float(Y_pred),
+                       line_dash="dot",
+                       line_color="orange",
+                       annotation_text=f"Estimated cost of your project: {money_textf(Y_pred_lin)}$", #
+                       annotation_font_size=20,
+                       annotation_font_color="orange"
+                     )
+        
+    # Overlay histograms
     fig1.update_xaxes(title_text="Construction Cost in Log10")
     fig1.update_yaxes(title_text="Number of buildings")
-    for neighborhood in options:
-
-        data_filter = data2[data['Neighborhoods - Analysis Boundaries'] == neighborhood]
-
-        fig1.add_trace(
-            go.Histogram(
-                x = data_filter['Est_Cost_Infl_log10'],
-                nbinsx = 25,
-                name=neighborhood)
-        )
-
-    # Overlay histograms
-    fig1.update_layout(barmode='overlay')
+    #fig1.update_layout(barmode='overlay')
     # Reduce opacity to see both histograms
-    fig1.update_traces(opacity=0.75)
     st.plotly_chart(fig1, use_container_width=True)
+    st.markdown("Please note that the x-axis is in logarithmic 10. The numbers on the x-axis represent the amount of zeros in project cost ($). For example, if log10(cost) is 5, it means 100 000 dollar.")
 
-st.markdown("---")
-st.markdown("""
-	    The model is still in full development. Check back here again!\n
-	    If you like it ❤️, thanks for sharing it with your network and friends! 
-	""")
-st.markdown("---")
+    st.markdown("---")
+    st.markdown("""
+            If you like ❤️ it, thanks for sharing it with your network and friends! 
+        """)
+    st.markdown("---")
 ### Footer 
 
 st.markdown("""
         🍇
-        If you wish to learn more about our project, \ncheck this link [Github link](https://github.com/LHB-Group/Civil-Work-Bidding-And-Investment-Helper) 📖
+        If you wish to learn more about our project, \ncheck out this: [Github link](https://github.com/LHB-Group/Civil-Work-Bidding-And-Investment-Helper) 📖
     """)    
 
