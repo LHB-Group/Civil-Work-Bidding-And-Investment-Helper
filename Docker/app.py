@@ -27,7 +27,7 @@ ZIPCODE = ['94102', '94103', '94105', '94107', '94108', '94109', '94110', '94111
         '94115', '94116', '94117', '94118', '94121', '94122', '94123', '94124', '94127', '94130',
         '94131', '94132', '94133', '94134', '94158']
 
-CONSTRUCTION_TYPE = ['Ordinary', 'Fire resistive', 'Non-combustible', 'Heavy timber', 'Wood-framed', 'Other']
+CONSTRUCTION_TYPE = ['Ordinary', 'Fire resistive', 'Non-combustible', 'Wood-framed', 'Other']
 
 PERMIT_TYPE = ['New Construction (Reinforced concrete, Steel, etc...)', 'New Construction Wood Frame']
 
@@ -46,8 +46,6 @@ def get_construction_type (construction_type):
         return '2'
     elif construction_type == 'Ordinary':
         return '3'
-    elif construction_type == 'Heavy timber':
-        return '4'
     elif construction_type == 'Wood-framed':
         return '5'
     else:
