@@ -27,7 +27,11 @@ ZIPCODE = ['94102', '94103', '94105', '94107', '94108', '94109', '94110', '94111
         '94115', '94116', '94117', '94118', '94121', '94122', '94123', '94124', '94127', '94130',
         '94131', '94132', '94133', '94134', '94158']
 
-NEIGHBORHOOD = []
+CONSTRUCTION_TYPE = ['Ordinary', 'Fire resistive', 'Non-combustible', 'Heavy timber', 'Wood-framed', 'Other']
+
+PERMIT_TYPE = ['New Construction (Reinforced concrete, Steel, etc...)', 'New Construction Wood Frame']
+
+TYPE_USE = ['1 family dwelling', '2 family dwelling', 'apartments']
 
 # Functions ()
 get_permit_type = lambda x: 1 if x == 'New Construction (Reinforced concrete, Steel, etc...)' else 2
@@ -86,9 +90,9 @@ st.subheader("Tell me about your construction project 🏗️ 👷 🚧")
 col1, col2,col3 = st.columns([1,1,1])
 with st.form('Form'):
     with col1 :
-        permit_type = st.selectbox('Permit Type', ['New Construction (Reinforced concrete, Steel, etc...)', 'New Construction Wood Frame'],key=1)
-        type_construction =  st.selectbox('Construction type', ['Ordinary', 'Fire resistive','Wood-framed','Other'], key=2)
-        type_use= st.selectbox('Type of use', ['1 family dwelling', '2 family dwelling', 'apartments'],key=3)
+        permit_type = st.selectbox('Permit Type', PERMIT_TYPE,key=1)
+        type_construction =  st.selectbox('Construction type', CONSTRUCTION_TYPE, key=2)
+        type_use= st.selectbox('Type of use', TYPE_USE,key=3)
         st.markdown("Check out the official webpage of [SF.gov](https://sf.gov/topics/building) for more details on the categories above.")
     with col2 :
  
