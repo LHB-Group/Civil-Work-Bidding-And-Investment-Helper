@@ -85,7 +85,7 @@ st.markdown("🚀 Let's start 🚀")
 st.markdown("---")
 ### User inputs
 st.subheader("Tell me about your construction project 🏗️ 👷 🚧")
-col1, col2,col3 = st.columns([1,1,1])
+col1,col2,col3 = st.columns([1,1,1])
 with st.form('Form'):
     with col1 :
         permit_type = st.selectbox('Permit Type', PERMIT_TYPE,key=1)
@@ -104,11 +104,8 @@ with st.form('Form'):
         street_suffix = st.selectbox('Street suffix (optional)', STREET_SUFFIX, key=9)
         zipcode = st.selectbox('Zipcode', ZIPCODE, key=10)
     submitted = st.form_submit_button('Confirm')
-
-	
+    
 st.markdown("---")
-coordinates = '' #using this line for zooming map in the if statement below
-Y_pred=''#using this for the histogram
 if submitted :
     data_load_state = st.text('Loading results...')
 
@@ -122,7 +119,6 @@ if submitted :
         #coordinates = [-122.431000, 37.750000]  #san francisco central coord.]
     lat_lon = coordinates[0] * coordinates[1] # lat * lon
 
-
     project_detail = {'Permit Type' : [permit_type], 
         'Construction Type': [type_construction],
         'Type of Use': [type_use],
@@ -132,26 +128,27 @@ if submitted :
         'Address': [address],
         'Lon, Lat': [coordinates]
         }
-    
 
-	# Attn: Don't forget to change cols and types if you change your model
-    cols = ['Permit Type', 'Proposed Units', 'Proposed Use_',
-		    'Number of Proposed Stories_','Proposed Construction Type_', 'lat_lon', 'total_area_m2'
+    # Attn: Don't forget to change cols and types if you change your model
+    cols = [
+    'Permit Type', 'Proposed Units', 'Proposed Use_',
+    'Number of Proposed Stories_','Proposed Construction Type_', 
+    'lat_lon', 'total_area_m2'
             ]
 
     val_dict = {'Permit Type' : [get_permit_type(permit_type)], 
-		        'Proposed Construction Type_': [get_construction_type(type_construction)], 
-		        'Proposed Use': [type_use],
-		        'Number of Proposed Stories_': [float(n_story)] ,
-         	    'Proposed Units' : [float(n_units)],
-		        'lat_lon':[lat_lon],
+                'Proposed Construction Type_': [get_construction_type(type_construction)], 
+                'Proposed Use': [type_use],
+                'Number of Proposed Stories_': [float(n_story)] ,
+                'Proposed Units' : [float(n_units)],
+                'lat_lon':[lat_lon],
                 'total_area_m2': [building_footprint_area * n_story]
                 }
 
     X_val= pd.DataFrame(val_dict)
-    # load the model from disk
-    prepro_fn = 'finalprepro.jolib'#preprocessing model
-    model_fn  ='finalmodel.jolib'#random forest model
+    # load the models from disk
+    prepro_fn = 'finalprepro.joblib'#preprocessing model
+    model_fn  ='finalmodel.joblib'#random forest model
     loaded_prepro = joblib.load(prepro_fn)
     loaded_model = joblib.load(model_fn)
 
@@ -170,15 +167,6 @@ if submitted :
     st.markdown('---')
 #DATA ANALYSIS PART
     st.subheader('More about previous construction projects 🗄️ 🏗️ 🌉')
-#fixing central point of map
-    LAT_0 , LON_0 = 37.80102807967815, -122.4122826364495 #random san francisco coord.
-    if len(coordinates)>0: #focusing on the address
-        LAT_0 , LON_0 = coordinates[1], coordinates[0]
-
-    ###LINK TO DATABASE
-    #db_v4 = 'https://drive.google.com/file/d/xxxx/view?usp=sharing'
-    #fname = db_v4
-    #DATA_URL = 'https://drive.google.com/uc?id=' + fname.split('/')[-2]
     DATA_URL = "Building_Permits_v4.csv"
     # Use `st.cache` when loading data is extremly useful
     # because it will cache your data so that your app 
@@ -196,26 +184,25 @@ if submitted :
     data_load_state = st.text('Loading data ...')
     data = load_data()
     data_load_state.text("") # change text from "Loading data..." to "" once the the load_data function has run
-    
+    #TABLE 1 - Raw Data 
+    #Masking nearby construction projects for the map
+    LAT_0 , LON_0 = coordinates[1], coordinates[0]    
     mask1 = (data['lon']>LAT_0*.9995) & (data['lon']<LAT_0*1.0005)  #.sample(2000) #taking 2000 data only
     mask2 = (data['lat']<LON_0*.9997) & (data['lat']>LON_0*1.0003) 
     mask_t = mask1 & mask2
     data1 = data.loc[mask_t,:]
     data1['Construction Cost ($) in Log10']=data1['Est_Cost_Infl_log10']
-    #Let's map all construction projects in a map
-    #px.set_mapbox_access_token(ACCESS_TOKEN)
     ## Run the below code if the check is checked ✅
-    if st.checkbox('Show raw data'):
+    if st.checkbox('Show raw data',value = True):
         st.header('Raw data')
-        st.write(data1)  
-    
+        st.write(data1) 
+    #FIGURE 1 - MAP: Creating a layer of point circles for the location of user project to show on the map
     R = 0.0015
     center_lon = LON_0
     center_lat = LAT_0
     t = np.linspace(0, 2*3.14, 100)
     circle_lon =center_lon + R*np.cos(t)
     circle_lat =center_lat +  0.80*R*np.sin(t)
-
 
     coords=[]
     for lo, la in zip(list(circle_lon), list(circle_lat)):
@@ -233,7 +220,7 @@ if submitted :
              line=dict(width=3.0)
             )]
             
-    #FIGURE 1 - MAP
+    #FIGURE 1 - MAP PARAMETERS
     with open('.token_api') as f:
         ACCESS_TOKEN = f.readlines()[0] 
     px.set_mapbox_access_token(ACCESS_TOKEN)
@@ -261,7 +248,7 @@ if submitted :
     st.markdown("Please note that the legend is in logarithmic 10. The numbers on the legend box represent the amount of zeros in project cost ($). For example, if log10(cost) is 5, it means 100 000 dollar.")
 
     st.markdown("---")
-    #FIGURE 2
+    #FIGURE 2 - Year distribution of constructed number of building stories
     def cat_stories (st): 
      if st < 3 :
       y = '0-2 stories'
@@ -277,12 +264,10 @@ if submitted :
 
     col_ ='Number of Proposed Stories'
     data[col_+'_cat'] = data[col_].apply(lambda x: cat_stories(x)).astype(str)
-    
-    #data['Number of Proposed Stories']=data['Number of Proposed Stories'].astype(int)
     fig0 = px.histogram (data.sort_values(by= 'Number of Proposed Stories_cat'), x='Completed Date',
             title='Histogram of Completed Buildings in San Francisco',
             opacity=0.85,
-            color='Number of Proposed Stories_cat',#"Permit Type Definition",
+            color='Number of Proposed Stories_cat',
             hover_data=['Number of Proposed Stories']
             )
     fig0.update_xaxes(rangeslider_visible=True,
@@ -311,8 +296,8 @@ if submitted :
                    color= 'Neighborhoods - Analysis Boundaries',
                    nbins=10
                    )    
-    if Y_pred !='': 
-        fig1.add_vline(x=float(Y_pred),
+    #FIGURE 3 - Adding a vertical line for the estimated cost for the user
+    fig1.add_vline(x=float(Y_pred),
                        line_dash="dot",
                        line_color="orange",
                        annotation_text=f"Estimated cost of your project: {money_textf(Y_pred_lin)}$", #
@@ -323,11 +308,8 @@ if submitted :
     # Overlay histograms
     fig1.update_xaxes(title_text="Construction Cost in Log10")
     fig1.update_yaxes(title_text="Number of buildings")
-    #fig1.update_layout(barmode='overlay')
-    # Reduce opacity to see both histograms
     st.plotly_chart(fig1, use_container_width=True)
     st.markdown("Please note that the x-axis is in logarithmic 10. The numbers on the x-axis represent the amount of zeros in project cost ($). For example, if log10(cost) is 5, it means 100 000 dollar.")
-
     st.markdown("---")
     st.markdown("""
             If you like ❤️ it, thanks for sharing it with your network and friends! 
