@@ -5,11 +5,12 @@
         - Levent Isbiliroglu
     
     Description:
-        This script apply some data cleaning and add some basics features to our dataset for future use.
-        we work from official San Francisco dataset: https://data.sfgov.org/Housing-and-Buildings/Building-Permits/i98e-djp9
-        At the end of this script you should have a new csv file inside the Datasets folder, called Building_Permits.csv
+        - This script apply some data cleaning and add some basics features to our dataset for future use.
+          we work from official San Francisco dataset: https://data.sfgov.org/Housing-and-Buildings/Building-Permits/i98e-djp9
+          At the end of this script you should have a new csv file inside the Datasets folder, called Building_Permits.csv
     
-    The official San Francisco dataset is updated weekly
+    Note:
+        - The official San Francisco dataset is updated weekly
 
 """
 
