@@ -79,6 +79,10 @@ print("\nFormat [street Suffix] for rows with [Street Name] = 'La Play' to fit G
 mask = dataset["Street Name"] == "La Playa"
 dataset.loc[mask, "Street Suffix"] = "Street"
 
+print("\nCreating [Address] feature\n")
+# Creating [Address] feature
+dataset['Address'] = dataset["Street Number"].astype(str) + " " + dataset["Street Name"] + " " + dataset["Street Suffix"] + ', San Francisco, CA ' + dataset['Zipcode']
+
 print("\nReformating [Proposed Construction Type]\n")
 # Proposed construction type has values of '5.0', '1.0', '5', '2.0', '3.0', '4.0', '1', '3', '2', '4', 'III'
 # Values for proposed construction type are modifed below in three steps
@@ -145,14 +149,14 @@ dataset_withLocation["Lon"] = lon_list
 lat_list = []
 lon_list = []
 for row in range(len(dataset_noLocation.values)):
-    address = str(dataset_noLocation["Street Number"].iloc[row]) +" "+ dataset_noLocation["Street Name"].iloc[row] + dataset_noLocation["Street Suffix"].iloc[row] + " SF US"
+    address = str(dataset_noLocation["Street Number"].iloc[row]) + " " + dataset_noLocation["Street Name"].iloc[row] + dataset_noLocation["Street Suffix"].iloc[row] + ', San Francisco, CA ' + dataset_noLocation["Zipcode"].iloc[row]
     try:
         location = geolocator.geocode(address, language="en")
         lat_list.append(location.latitude)
         lon_list.append(location.longitude)
     except:
         try :
-            address = str(dataset_noLocation["Street Number"].iloc[row]) +" "+ dataset_noLocation["Street Name"].iloc[row] + " SF US"
+            address = str(dataset_noLocation["Street Number"].iloc[row]) +" "+ dataset_noLocation["Street Name"].iloc[row] + ', San Francisco, CA ' +  dataset_noLocation["Zipcode"].iloc[row]
             location = geolocator.geocode(address, language="en")
             lat_list.append(location.latitude)
             lon_list.append(location.longitude)
@@ -221,7 +225,7 @@ col_ = "Neighborhoods - Analysis Boundaries"
 dataset[col_+'_'] = re_category (dataset[col_] , 20, 'Other' )
 
 print("\nCleaning of [Proposed Construction Type] feature\n")
-# for category of proposed construction type with less than 20 data, we use category '99'
+# For category of [proposed construction type] with less than 20 data, we use category '99'
 col_ = 'Proposed Construction Type'
 dataset[col_+'_'] = re_category (dataset[col_] , 20, '99' )
 
@@ -241,5 +245,5 @@ for feat in skewed_features:
 
 print("\nExport cleaned dataset to csv\n")
 #Export cleaned dataset to csv
-dataset.to_csv('../Datasets/Building_Permits.csv',index=False)
-print("\nDataset available\n")
+dataset.to_csv('../Documents/Datasets/Building_Permits.csv',index=False)
+print("\nDataset available on Datasets folder\n")
