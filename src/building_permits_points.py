@@ -23,7 +23,7 @@ dataset = pd.read_csv("../Documents/Datasets/Building_Permits.csv")
 # define schema
 schema = {
     'geometry':'Point',
-    'properties':[('address','str')]
+    'properties':[('Address','str')]
 }
 
 #open a fiona object
