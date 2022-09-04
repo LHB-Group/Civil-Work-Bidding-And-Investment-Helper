@@ -72,3 +72,12 @@ def cat_stories (st):
     else:
       y = 'More than 10 stories'
     return y
+
+
+def get_polygon_list(points):
+    polygon_list = []
+    for i in range(len(points)):
+        mask = polygons_serie.contains(points_serie[i])
+        polygon_list.append(polygons_serie[mask])
+        print(f'{len(polygon_list)}\n')
+    return polygon_list
