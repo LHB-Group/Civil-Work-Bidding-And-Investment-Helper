@@ -1,0 +1,10 @@
+ pandas
+ scikit-learn == 1.0.2
+ joblib
+ plotly
+ streamlit
+ numpy
+ Pillow
+ geopy
+ requests
+ regex
