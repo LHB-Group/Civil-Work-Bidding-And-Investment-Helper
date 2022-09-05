@@ -24,21 +24,21 @@ from scipy.special import boxcox1p
 
 # We get San Francisco dataset from official source
 # dataset source : https://data.sfgov.org/Housing-and-Buildings/Building-Permits/i98e-djp9
-print("get dataset from data.sfgov.org (this can take several minutes)")
+print("Retrieving dataset from data.sfgov.org (this can take several minutes)")
 source = 'https://data.sfgov.org/api/views/i98e-djp9/rows.csv?accessType=DOWNLOAD'
 dataset = pd.read_csv(source, low_memory = False)
 
-print("\nKeep permit of type 1 & 2 ...\n")
+print("\nKeeping permit of type 1 & 2 ...\n")
 # We only want to work on permit of type 1 & 2
 permit_type_mask = dataset["Permit Type"] < 3
 dataset = dataset.loc[permit_type_mask, :]
 
-print("\nKeep permit with complete status\n")
+print("\nKeeping permit with complete status\n")
 # We only want to want to keep permit with complete status
 permit_complete_mask = dataset["Current Status"] == "complete"
 dataset = dataset.loc[permit_complete_mask, :]
 
-print("\nkeep only : 1 family dwelling, 2 family dwelling and apartments for the feature [Proposed Use]\n")
+print("\nKeeping only : 1 family dwelling, 2 family dwelling and apartments for the feature [Proposed Use]\n")
 # We keep only : 1 family dwelling, 2 family dwelling and apartments for the feature ["Proposed Use"]
 family_dwelling_mask1 = dataset["Proposed Use"] == "1 family dwelling"
 family_dwelling_mask2 = dataset["Proposed Use"] == "2 family dwelling"
@@ -46,7 +46,7 @@ appartments_mask = dataset["Proposed Use"] == "apartments"
 Proposed_Use_mask = family_dwelling_mask1 | family_dwelling_mask2 | appartments_mask
 dataset = dataset.loc[Proposed_Use_mask,:]
 
-print("\nkeep known Estimated Costs\n")
+print("\nKeeping known Estimated Costs\n")
 # We only want to keep known Estimated Costs
 dataset.dropna(subset=['Estimated Cost'], inplace= True)
 
@@ -56,7 +56,7 @@ dataset['Zipcode'] = dataset['Zipcode'].replace(np.nan, 0.0).astype(str)
 dataset['Zipcode'] = dataset['Zipcode'].apply(lambda x: x[:-2])
 dataset['Zipcode'] = dataset['Zipcode'].replace('0','')
 
-print("\nFormat the [street name] feature\n")
+print("\nFormating the [street name] feature\n")
 # Format the [street name] feature to fit with Nominatim call
 for row in range(len(dataset.values)):
     if dataset["Street Name"].iloc[row][0] == "0":
@@ -71,11 +71,11 @@ for row in range(len(dataset.values)):
     if dataset["Street Suffix"].iloc[row] == "Cr":
         dataset["Street Suffix"].iloc[row] = dataset["Street Suffix"].iloc[row].replace("Cr","Circle")
 
-print("\nReplace 'nan' values inside [Street Suffix] by an empty string " "\n")
+print("\nReplacing 'nan' values inside [Street Suffix] by an empty string " "\n")
 # Replace "nan" values inside [Street Suffix] by an empty string " "
 dataset["Street Suffix"].fillna(" ", inplace=True)
 
-print("\nFormat [street Suffix] for rows with [Street Name] = 'La Play' to fit Geopy\n")
+print("\nFormating [street Suffix] for rows with [Street Name] = 'La Play' to fit Geopy\n")
 # Format [street Suffix] for rows with [Street Name] = "La Play" to fit Geopy
 mask = dataset["Street Name"] == "La Playa"
 dataset.loc[mask, "Street Suffix"] = "Street"
@@ -112,7 +112,7 @@ print("\nAdding a [Year] feature\n")
 # Adding a [Year] feature
 dataset['Year']=dataset['Permit Creation Date'].dt.year
 
-print("\nApply inflation\n")
+print("\nApplying inflation\n")
 # Adding new feature with adjusted prices according to US dollar inflation
 #note: cpi quickly adjusts US dollars for inflation using the consumer price index CPI
 #see ref. https://towardsdatascience.com/the-easiest-way-to-adjust-your-data-for-inflation-in-python-365490c03969
@@ -124,7 +124,7 @@ dataset["Rev_Cost_Infl"] = dataset.apply(lambda x: cpi.inflate(x["Revised Cost"]
 #creating new features with logarithmic of estimated cost + inflation
 dataset["Est_Cost_Infl_log10"] = np.log10(dataset["Est_Cost_Infl"])
 
-print("\nCreate [Lat] and [Lon] features\n")
+print("\nCreating [Lat] and [Lon] features\n")
 # Split our initial dataset in 2 distinct datasets : "permit with no location" and "permit with location"
 missingLocation_mask = dataset["Location"].isna()
 
@@ -182,7 +182,7 @@ dataset['Lon'] = dataset['Lon'].astype(float)
 # Creating a new feature with Lat * Lon
 dataset['lat_lon']=dataset['Lat']*dataset['Lon']
 
-print("\nCleaning of [Number of Proposed Stories] feature\n")
+print("\nPreprocessing [Number of Proposed Stories] feature - Reverifying number of stories\n")
 # Manipulations on Number of Proposed Stories feature
 # there are some mistaken values in number of proposed stories. we will use description column to fix some of them
 # let's take rows where there less than 1 and more than 15 stories
@@ -220,12 +220,12 @@ m_out = m_out0 & m_out1 & m_out2 & m_out3 & m_out4
 #removing outliers
 dataset=dataset.loc[m_out,:]
 
-print("\nCleaning of [Neighborhoods - Analysis Boundaries] feature\n")
+print("\nPreprocessing [Neighborhoods - Analysis Boundaries] feature - Adding 'other' category\n")
 # Feature for neighborhood categoriess less than 20 data, we use category 'other'
 col_ = "Neighborhoods - Analysis Boundaries"
 dataset[col_+'_'] = re_category (dataset[col_] , 20, 'Other' )
 
-print("\nCleaning of [Proposed Construction Type] feature\n")
+print("\nPreprocessing [Proposed Construction Type] feature - Adding a category of '99'\n")
 # For category of [proposed construction type] with less than 20 data, we use category '99'
 col_ = 'Proposed Construction Type'
 dataset[col_+'_'] = re_category (dataset[col_] , 20, '99' )
@@ -244,7 +244,10 @@ lam = 0.10 #lan value obtained after trial and error. If 0 is used, boxcox1p bec
 for feat in skewed_features:
     dataset[feat+'_bct'] = boxcox1p(dataset[feat].fillna(dataset[feat].mean()), lam)
 
-print("\nExport cleaned dataset to csv\n")
+print("\nExporting cleaned dataset to csv\n")
 #Export cleaned dataset to csv
-dataset.to_csv('../Documents/Datasets/Building_Permits.csv',index=False)
+try:
+    dataset.to_csv('../Documents/Datasets/Building_Permits.csv',index=False)
+except: #if folder was not created, output .csv file will be exported to the same folder.
+    dataset.to_csv('Building_Permits.csv',index=False)
 print("\nDataset available on Datasets folder\n")
