@@ -1,3 +1,13 @@
+"""
+    authors: 
+        - Baptiste Cournault
+        - Hicham Mrani
+        - Levent Isbiliroglu
+    
+    Description:
+        - All functions used for the project
+"""
+
 def re_category (ds,counts, repl_ ):
     """
         It replaces the categories that are not sufficiently presented in the dataseries
