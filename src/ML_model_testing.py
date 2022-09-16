@@ -4,16 +4,25 @@
         - Hicham Mrani
         - Levent Isbiliroglu
     
-    Description:
+    description:
         This script tests different machine learning models by using cross validation
-        provided a cleaned database and a list of features.
-        It is inspired by a Kaggle notebook: https://www.kaggle.com/code/serigne/stacked-regressions-top-4-on-leaderboard
- 
+        provided a cleaned database, a list of features, a target column name and parameters of fold number and random state.
+        It was inspired by a Kaggle notebook: https://www.kaggle.com/code/serigne/stacked-regressions-top-4-on-leaderboard
+        Parameters used in machine learning models are tuned by grid search. Some of the grid search experiments are presented
+        in a notebook located on Notebooks/predictive_models.ipynb . Refer to this file for more details.
+        
+    inputs:
+        User needs to input the following variables
+        fname1: direction to the database file
+        description_ML: explain why you perform this experiment
+        features_list: name of feature columns to be used in machine learning model
+        target_variable: name of target column to be used in machine learning model
+        k_fold: number of folds in cross validation
+        random_state: random state
 """
-
+#Libraries
 import pandas as pd
 import numpy as np
-
 
 #sklearn libraries 
 from sklearn.linear_model import LinearRegression, Lasso, ElasticNet
@@ -30,17 +39,17 @@ from functions import cross_validate_score, score_ML_log
 import warnings
 warnings.filterwarnings('ignore')
 
-#inputs : fname1, description_ML, features_list, target_variable, k_fold, random_state
-#db_v8 = 'https://drive.google.com/file/d/1Ffbhy12m4JG9REEdSQwwewIFE0KUiEX3/view?usp=sharing'
-#fname1 = db_v8
-#fname1='https://drive.google.com/uc?id=' + fname1.split('/')[-2]
-fname1 = '/home/leo/Downloads/Building_Permits_v8.csv'
+#Start of User Input
+db_v8 = 'https://drive.google.com/file/d/1Ffbhy12m4JG9REEdSQwwewIFE0KUiEX3/view?usp=sharing'
+fname1 = db_v8
+fname1='https://drive.google.com/uc?id=' + fname1.split('/')[-2]
 dataset = pd.read_csv(fname1, low_memory=False)
-#Validation function
+
+#Number of folds in cross validation and random state
 n_folds = 4
 random_state = 0
 
-description_ML = "dataset V8 | default feature used + total_area_m2 + Neighborhoods | Hicham"#add why you do this experiment
+description_ML = "dataset V8 | models tuned for master branch | Levent"#add why you do this experiment
 
 features_list = [
     "Permit Type",
@@ -49,12 +58,11 @@ features_list = [
     "Proposed Units",
     "Proposed Construction Type_", 
     'lat_lon',
-    "Neighborhoods - Analysis Boundaries",
-    "total_area_m2",
-]
+    "total_area_m2"
+    ]
 
 target_variable = "Est_Cost_Infl_log10"
-
+#End of User Input
 
 # Separate target variable Y from features X
 
@@ -122,7 +130,7 @@ print('\n...Done...\n')
 print("\nDefining machine learning models...\n")
 regressor0= LinearRegression()
 #lasso regression
-lasso = Lasso(alpha =0.0005, random_state=random_state)
+lasso = Lasso(alpha =0.0001, random_state=random_state)
 #elastic net regression
 """
 Elastic Net Regression:
@@ -143,7 +151,11 @@ Kernel Ridge Regression:
     by a kernel function.     
 """
 
-KRR = KernelRidge(alpha=0.5, kernel='polynomial', gamma=0.05, degree=2, coef0=1.0)
+KRR = KernelRidge(
+    alpha=0.5, kernel='polynomial', 
+    gamma=0.05, degree=2, 
+    coef0=1.0
+    )
 #gradient boosting regression
 """
 Gradient Boosting Model:
@@ -154,10 +166,12 @@ Gradient Boosting Model:
     Loss function is defined as 'huber'. It is a combination of 'squared_error' 
     and 'absolute_error'.
 """
-GBoost = GradientBoostingRegressor(n_estimators=1000, learning_rate=0.05,
-                                   max_depth=9, max_features='auto',
-                                   min_samples_leaf=3, min_samples_split=3, 
-                                   loss='huber', random_state =random_state)
+GBoost = GradientBoostingRegressor(
+    n_estimators=1000, learning_rate=0.05,
+    max_depth=9, max_features='auto',
+    min_samples_leaf=3, min_samples_split=3, 
+    loss='huber', random_state =random_state
+    )
 
 #xgb
 """
@@ -171,12 +185,14 @@ GBoost = GradientBoostingRegressor(n_estimators=1000, learning_rate=0.05,
     
     Parameters were tuned by GridSearch.
 """
-model_xgb = xgb.XGBRegressor(colsample_bytree=0.8, gamma=0.4, 
-                             learning_rate=0.1, max_depth=25, 
-                             min_child_weight=1.5, n_estimators=400,
-                             reg_alpha=1.2, reg_lambda=1.1,
-                             subsample=0.7, silent=1,
-                             random_state =random_state, nthread = -1)
+model_xgb = xgb.XGBRegressor(
+    max_depth=10,
+    learning_rate=0.05,
+    n_estimators=250,
+    colsample_bytree=0.9,
+    subsample=0.8,
+    random_state= random_state
+    )
 
 
 #light gb
@@ -188,14 +204,15 @@ model_xgb = xgb.XGBRegressor(colsample_bytree=0.8, gamma=0.4,
     LightGBM: A Highly Efficient Gradient Boosting Decision Tree, 2017.
     link : https://papers.nips.cc/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html
     
-    Parameters were obtained by GridSearch.
+    Parameters were initially obtained from a Kaggle notebook above and refined by GridSearch.
 """
-model_lgb = lgb.LGBMRegressor(objective='regression',num_leaves=5,
-                              learning_rate=0.05, n_estimators=720,
-                              max_bin = 55, bagging_fraction = 0.8,
-                              bagging_freq = 5, feature_fraction = 0.2319,
-                              feature_fraction_seed=9, bagging_seed=9,
-                              min_data_in_leaf =6, min_sum_hessian_in_leaf = 11)
+model_lgb = lgb.LGBMRegressor(
+    objective='regression',num_leaves=5,
+    learning_rate=0.05, n_estimators=300,
+    max_bin = 50, bagging_fraction = 0.8,
+    bagging_freq = 5, feature_fraction = 0.2,
+    feature_fraction_seed=9, bagging_seed=9,
+    min_data_in_leaf =6, min_sum_hessian_in_leaf = 10)
 #random forest
 """
     A random forest regressor.
@@ -209,9 +226,13 @@ model_lgb = lgb.LGBMRegressor(objective='regression',num_leaves=5,
     
     Parameters were obtained by GridSearch.
 """
-randomForestRegressor = RandomForestRegressor(max_depth=7, min_samples_leaf =4,
-                                              min_samples_split=2, n_estimators=300,
-                                              random_state=random_state)
+randomForestRegressor = RandomForestRegressor(
+    n_estimators= 300,
+    max_depth= 25,
+    min_samples_split= 4,
+    min_samples_leaf= 1, 
+    random_state= random_state
+    )
 print('\n...Done...\n')
 
 models = [regressor0,
