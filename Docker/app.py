@@ -94,7 +94,7 @@ with st.form('Form'):
         st.markdown("Check out the official webpage of [SF.gov](https://sf.gov/topics/building) for more details on the categories above.")
     with col2 :
  
-        n_story = st.number_input(label='Number of stories', min_value= 0, max_value=15, step = 1, key=4)
+        n_story = st.number_input(label='Number of stories', min_value= 1, max_value=15, step = 1, key=4)
         n_units = st.number_input(label='Number of proposed units', min_value= 1, max_value=200, step = 1, key=5)
         building_footprint_area = st.number_input(label='Building ground surface area (m²)',min_value= 1.0, key=6)
 
@@ -130,11 +130,11 @@ if submitted :
         }
 
     # Attn: Don't forget to change cols and types if you change your model
-    cols = [
-    'Permit Type', 'Proposed Units', 'Proposed Use_',
-    'Number of Proposed Stories_','Proposed Construction Type_', 
-    'lat_lon', 'total_area_m2'
-            ]
+    #cols = [
+    #'Permit Type', 'Proposed Units', 'Proposed Use_',
+    #'Number of Proposed Stories_','Proposed Construction Type_', 
+    #'lat_lon', 'total_area_m2'
+    #        ]
 
     val_dict = {'Permit Type' : [get_permit_type(permit_type)], 
                 'Proposed Construction Type_': [get_construction_type(type_construction)], 
@@ -156,25 +156,27 @@ if submitted :
     Y_pred = loaded_model.predict(X_val)
 
     Y_pred_lin = int(10**Y_pred)
-
+    rev_cost_ratio= 1.6204 #multiplier to obtain revised cost given estimated cost (see Exploratory Data Analysis)
+    Y_pred_lin_rev = Y_pred_lin * rev_cost_ratio
     ### Print the results
     st.subheader("Results 💸💰🏷")
     st.subheader('Your project details:')
     st.write(pd.DataFrame(project_detail)) 
     st.subheader("Estimated cost for your construction project:\n")
-    st.subheader(f"➡️ {money_textf(Y_pred_lin)} 💲")
+    st.subheader(f"➡️ {money_textf(Y_pred_lin_rev)} 💲")
     st.markdown("The cost represents the value of dollar in 2022.")
     st.markdown('---')
 #DATA ANALYSIS PART
     st.subheader('More about previous construction projects 🗄️ 🏗️ 🌉')
-    DATA_URL = "Building_Permits_v4.csv"
+    DATA_URL = "Building_Permits_v8.csv"
     # Use `st.cache` when loading data is extremly useful
     # because it will cache your data so that your app 
     # won't have to reload it each time you refresh your app
     @st.cache(allow_output_mutation=True)
     def load_data():
         name_cols = ['Zipcode','Est_Cost_Infl_log10','lon','lat','Number of Proposed Stories',
-                    'Permit Type', 'Est_Cost_Infl', 'Completed Date', 'Neighborhoods - Analysis Boundaries']#read only these columns for faster app
+                    'Permit Type', 'Est_Cost_Infl', 'Completed Date', 'Neighborhoods - Analysis Boundaries',
+                    'Number of Proposed Stories_cat','cost_per_m2']#read only these columns for faster app
         data = pd.read_csv(DATA_URL,usecols  = name_cols)
         data['Est_Cost_Infl_styled']=data['Est_Cost_Infl'].apply(lambda x : money_textf(x))
         return data
@@ -221,10 +223,7 @@ if submitted :
             )]
             
     #FIGURE 1 - MAP PARAMETERS
-    with open('.token_api') as f:
-        ACCESS_TOKEN = f.readlines()[0] 
-    px.set_mapbox_access_token(ACCESS_TOKEN)
-    fig = px.scatter_mapbox(
+    fig1 = px.scatter_mapbox(
         data1, 
         lat="lon",
         lon="lat",
@@ -232,45 +231,72 @@ if submitted :
         center = {'lat': LAT_0, 'lon': LON_0}, 
         color='Construction Cost ($) in Log10',
         title = 'Nearby construction projects completed since early 1980s. Your project is within the blue circle.',
-        mapbox_style="outdoors",
+        mapbox_style="open-street-map",#"outdoors",
         color_continuous_scale='jet',
         opacity = 0.9,
         height = 700,
         custom_data=['Number of Proposed Stories', 'Est_Cost_Infl_styled', 'Completed Date', 'Neighborhoods - Analysis Boundaries']
         )
 
-    fig.update_layout(hovermode="closest")
-    if len(coordinates)>0 :
-        fig.update_layout(mapbox_layers=layers)
-    fig.update_traces(hovertemplate="Neighborhood: %{customdata[3]} <br> Number of Stories:  %{customdata[0]} <br> Construction Cost ($): %{customdata[1]} <br> Completion Date:  %{customdata[2]}")
+    fig1.update_layout(hovermode="closest")
+    fig1.update_layout(mapbox_layers=layers)
+    fig1.update_traces(hovertemplate="Neighborhood: %{customdata[3]} <br> Number of Stories:  %{customdata[0]} <br> Construction Cost ($): %{customdata[1]} <br> Completion Date:  %{customdata[2]}")
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig1, use_container_width=True)
     st.markdown("Please note that the legend is in logarithmic 10. The numbers on the legend box represent the amount of zeros in project cost ($). For example, if log10(cost) is 5, it means 100 000 dollar.")
 
     st.markdown("---")
-    #FIGURE 2 - Year distribution of constructed number of building stories
-    def cat_stories (st): 
-     if st < 3 :
-      y = '0-2 stories'
-     elif st< 5 :
-      y = '3-4 stories'
-     elif st < 8 :
-      y = '5-7 stories'
-     elif st < 10 :
-      y = '8-9 stories'
-     else:
-      y = 'More than 10 stories'
-     return y
 
-    col_ ='Number of Proposed Stories'
-    data[col_+'_cat'] = data[col_].apply(lambda x: cat_stories(x)).astype(str)
-    fig0 = px.histogram (data.sort_values(by= 'Number of Proposed Stories_cat'), x='Completed Date',
+    #Figure 2 - Histogram of estimated cost per square meter
+    
+    m1 = data['cost_per_m2'] >data['cost_per_m2'].quantile(0.075) #masking 1
+    m2 = data['cost_per_m2'] <data['cost_per_m2'].quantile(0.925) #masking 2
+
+    
+    df1=data.loc[m1&m2,['Number of Proposed Stories_cat','cost_per_m2']]
+    df1['rev_cost_per_m2'] = rev_cost_ratio * df1['cost_per_m2']  
+    df1['rev_cost_per_ft2'] = df1['rev_cost_per_m2'] /10.764 #conversion to ft sq 
+
+    def re_category(x):
+        if (x == '5-7 stories') | (x == '8-9 stories') | (x == 'More than 10 stories') :
+            y = '5 and more stories'
+        else: 
+            y =x 
+        return y
+            
+    df1['Number of Proposed Stories '] = df1['Number of Proposed Stories_cat'].apply(lambda x: re_category(x))
+
+
+    fig2 = px.histogram (df1.sort_values(by = 'Number of Proposed Stories '), x='rev_cost_per_m2',
+                    title='Histogram of Construction Cost per Square Meter in San Francisco',
+                    opacity=0.8,
+                    color= 'Number of Proposed Stories ',
+                    range_x=[0, 14000]
+                    )
+    #FIGURE - Adding a vertical line for the estimated cost per ft2 for the user
+    val_per_m2 = Y_pred_lin_rev/(building_footprint_area * n_story)
+    fig2.add_vline(x=float(val_per_m2),
+                       line_dash="dot",
+                       line_color="orange",
+                       annotation_text=f"Cost of your project: {int(val_per_m2)}$ per square meter", 
+                       annotation_font_size=20,
+                       annotation_font_color="orange"
+                     )
+
+    # Overlay histograms
+    fig2.update_xaxes(rangeslider_visible=False, title = 'Construction cost per square meter (2022 $)')
+    fig2.update_yaxes(title_text="Number of buildings")
+    st.plotly_chart(fig2, use_container_width=True)
+    st.markdown("---")
+
+    #FIGURE 3 - Year distribution of constructed number of building stories
+    data['Number of Proposed Stories '] = df1['Number of Proposed Stories ']
+    fig3 = px.histogram (data.sort_values(by= 'Number of Proposed Stories '), x='Completed Date',
             title='Histogram of Completed Buildings in San Francisco',
             opacity=0.85,
-            color='Number of Proposed Stories_cat',
-            hover_data=['Number of Proposed Stories']
+            color='Number of Proposed Stories '
             )
-    fig0.update_xaxes(rangeslider_visible=True,
+    fig3.update_xaxes(rangeslider_visible=True,
             rangeselector=dict(
             buttons=list([
                 dict(count=1, label="1y", step="year", stepmode="backward"),
@@ -280,37 +306,10 @@ if submitted :
                 dict(count=30, label="30y", step="year", stepmode="backward"),
                 dict(step="all")
             ])))
-    fig0.update_layout(xaxis=dict(rangeselector = dict(font = dict( color = "crimson"))))
-    st.plotly_chart(fig0, use_container_width=True)
+    fig3.update_layout(xaxis=dict(rangeselector = dict(font = dict( color = "crimson"))))
+    st.plotly_chart(fig3, use_container_width=True)
     st.markdown("---")
-
-    #FIGURE 3 - Histogram
-    m_out0 = data['Est_Cost_Infl_log10'] >= data['Est_Cost_Infl_log10'].quantile(0.01)
-    m_out1 = data['Est_Cost_Infl_log10'] <= data['Est_Cost_Infl_log10'].quantile(0.99)
-    data2 = data.loc[m_out0&m_out1,:]
-
-    fig1 = px.histogram (data2.sort_values(by = 'Neighborhoods - Analysis Boundaries'), 
-                   x='Est_Cost_Infl_log10',
-                   title='Histogram of Project Costs in San Francisco',
-                   opacity=0.85,
-                   color= 'Neighborhoods - Analysis Boundaries',
-                   nbins=10
-                   )    
-    #FIGURE 3 - Adding a vertical line for the estimated cost for the user
-    fig1.add_vline(x=float(Y_pred),
-                       line_dash="dot",
-                       line_color="orange",
-                       annotation_text=f"Estimated cost of your project: {money_textf(Y_pred_lin)}$", #
-                       annotation_font_size=20,
-                       annotation_font_color="orange"
-                     )
-        
-    # Overlay histograms
-    fig1.update_xaxes(title_text="Construction Cost in Log10")
-    fig1.update_yaxes(title_text="Number of buildings")
-    st.plotly_chart(fig1, use_container_width=True)
-    st.markdown("Please note that the x-axis is in logarithmic 10. The numbers on the x-axis represent the amount of zeros in project cost ($). For example, if log10(cost) is 5, it means 100 000 dollar.")
-    st.markdown("---")
+    
     st.markdown("""
             If you like ❤️ it, thanks for sharing it with your network and friends! 
         """)
@@ -319,6 +318,6 @@ if submitted :
 
 st.markdown("""
         🍇
-        If you wish to learn more about our project, \ncheck out this: [Github link](https://github.com/LHB-Group/Civil-Work-Bidding-And-Investment-Helper) 📖
+        If you wish to learn more about our project, \ncheck out our [Github page](https://github.com/LHB-Group/Civil-Work-Bidding-And-Investment-Helper) 📖
     """)    
 
