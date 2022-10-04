@@ -39,6 +39,8 @@ Un ensemble de paramètres et de modèles d'apprentissage automatique ont été 
 
 > ❌ ne comprend pas le prix du terrain, les travaux de finition, l'électricité et la plomberie et les coûts commerciaux.
 
+![pipeline](https://github.com/LHB-Group/Civil-Work-Bidding-And-Investment-Helper/blob/0b9bc8a0add95aa4bfb8555bd3746303d31c0cf0/.img_pipeline.PNG)
+
 ## Documents clés
 	
 1 - Notebook sur [l'analyse exploratoire des données](https://github.com/LHB-Group/Civil-Work-Bidding-And-Investment-Helper/blob/Master/NoteBooks/Exploratory_Data_Analysis.ipynb)
@@ -74,7 +76,7 @@ Le projet est créé avec :
 ## Base de données
 1 - [Permis de construire à San Francisco](https://data.sfgov.org/Housing-and-Buildings/Building-Permits/i98e-djp9/data)
 
-> Un permis de construire est un document d'approbation officiel délivré par un organisme gouvernemental qui vous permet, à vous ou à votre entrepreneur, de réaliser un projet de construction ou de rénovation sur votre propriété. Pour plus de détails, consultez le [site](https://www.thespruce.com/what-is-a-building-permit-1398344). Chaque ville ou comté dispose de son propre bureau chargé des bâtiments, qui peut remplir de multiples fonctions telles que la délivrance de permis, l'inspection des bâtiments pour faire respecter les mesures de sécurité, la modification des règles pour répondre aux besoins d'une population croissante, etc. Pour la ville de San Francisco, la délivrance des permis est assurée par [SF DBI](www.sfdbi.org/).
+> Un permis de construire est un document d'approbation officiel délivré par un organisme gouvernemental qui vous permet, à vous ou à votre entrepreneur, de réaliser un projet de construction ou de rénovation sur votre propriété. Pour plus de détails, consultez le [site](https://www.thespruce.com/what-is-a-building-permit-1398344). Chaque ville ou comté dispose de son propre bureau chargé des bâtiments, qui peut remplir de multiples fonctions telles que la délivrance de permis, l'inspection des bâtiments pour faire respecter les mesures de sécurité, la modification des règles pour répondre aux besoins d'une population croissante, etc. Pour la ville de San Francisco, la délivrance des permis est assurée par [SF DBI](www.sfdbi.org/). Les données comprennent des détails sur l'ID de la demande/du permis, le lieu de travail, le statut actuel des demandes et d'autres détails. Les données sont mises à jour chaque semaine par SF DBI.
 
 2 - [Building Footprints in San Francisco](https://data.sfgov.org/Housing-and-Buildings/Building-Footprints-File-Geodatabase-Format-/asx6-3trm)
 
