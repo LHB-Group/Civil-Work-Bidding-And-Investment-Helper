@@ -38,6 +38,8 @@ since early 1980s (thanks to datasf.org). A set of parameters and machine learni
 
 > ❌ does not include land price, finishing work, electricity & plumbing and commercial costs
 
+![pipeline](https://github.com/LHB-Group/Civil-Work-Bidding-And-Investment-Helper/blob/0b9bc8a0add95aa4bfb8555bd3746303d31c0cf0/.img_pipeline.PNG)
+
 ## Key documents
 	
 1 - Notebook on [exploratory data analysis](https://github.com/LHB-Group/Civil-Work-Bidding-And-Investment-Helper/blob/Master/NoteBooks/Exploratory_Data_Analysis.ipynb)
@@ -72,6 +74,9 @@ Project is created with:
 
 ## Datasets
 1 - [San Francisco Permit Data](https://data.sfgov.org/Housing-and-Buildings/Building-Permits/i98e-djp9/data)
+
+> A building permit is an official approval document issued by a government agency that allows a construction or a renovation project on a property. More information can be found on this [website](https://www.thespruce.com/what-is-a-building-permit-1398344). Each city or county has its own building office to perform multiple functions such as issuing permits, inspecting buildings for safety measures, changing rules to meet the needs of a growing population, etc. For the City of San Francisco, building permits are handled by [SF DBI](www.sfdbi.org/). The dataset includes details on application/permit ID, job location, the current status of the applications and some other details. Data is uploaded weekly by DBI.
+
 2 - [Building Footprints in San Francisco](https://data.sfgov.org/Housing-and-Buildings/Building-Footprints-File-Geodatabase-Format-/asx6-3trm)
 
 ## Getting started
