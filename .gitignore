@@ -1,6 +1,8 @@
 # other
 Civil-Work-Bidding-And-Investment-Helper-FootPrint/
-/ShapeOut/*.dbf
+Documents/ShapeOuts/*
+Documents/Datasets/*
+Documents/*.pptx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
