@@ -6,16 +6,24 @@
 > In case of 404, click on [video capture](https://drive.google.com/file/d/13Y7McHQZtmEVhrX_G1Ukog_OVayNIo4P/view?usp=sharing)
 
 ## Table of contents
-* [Background](#background)
-* [Project](#project)
-* [Key documents](#key-documents)
-* [Technologies](#technologies)
-* [Datasets](#datasets)
-* [Getting Started](#getting-started)
-* [Top-directory layout](#top-directory-layout)
-* [License](#license)
-* [Authors](#authors)
-* [Contact](#contact)
+- [Table of contents](#table-of-contents)
+- [Background](#background)
+- [Project](#project)
+- [Key documents](#key-documents)
+  - [Top-directory layout](#top-directory-layout)
+- [Technologies](#technologies)
+- [Datasets](#datasets)
+- [Getting started](#getting-started)
+  - [Ensure that pip module is installed by running :](#ensure-that-pip-module-is-installed-by-running-)
+  - [How to install pipenv ?](#how-to-install-pipenv-)
+  - [Clone the repository :](#clone-the-repository-)
+  - [Create your virtual environment :](#create-your-virtual-environment-)
+  - [Install all required librairies :](#install-all-required-librairies-)
+- [Install the project](#install-the-project)
+- [License](#license)
+- [Authors](#authors)
+- [Contact](#contact)
+- [Made with ❤️ in Paris](#made-with-️-in-paris)
 
 ## Background
 
@@ -81,17 +89,68 @@ Project is created with:
 
 ## Getting started
 
-To run this project, 
-1. Clone the repo:
+To run this project you need :
+
+- [Python 3.10](https://www.python.org/ftp/python/3.11.0/python-3.11.0-amd64.exe)
+- [pip](https://packaging.python.org/en/latest/key_projects/#pip)
+- [pipenv](https://pypi.org/project/pipenv/#pipenv-python-development-workflow-for-humans) (optional)
+  
+### Ensure that pip module is installed by running : 
+```
+```sh
+python -m ensurepip --default-pip
+```
+
+### How to install pipenv ?
+```sh
+pip install pipenv
+```
+
+### Clone the repository :
    ```sh
    git clone https://github.com/LHB-Group/Civil-Work-Bidding-And-Investment-Helper.git
    ```
-2. Install [packages](#technologies)
 
-3. Install python libraries
-   ```sh
-   pip3 install -r requirements.txt
-   ```
+### Create your virtual environment :
+Go to your repository folder and run the following command.
+```sh
+python -m venv my_venv
+# the my_venv folder should appear
+```
+Once created you need to activate your venv
+
+Windows :
+```sh
+# Go to your repository folder and type :
+./my_venv/Scripts/activate
+# You should have something like :
+(my_venv) C:\Users\...\Civil-Work-Bidding-And-Investment-Helper>
+```
+Linux / Mac OS :
+```sh
+# Go to your repository folder and type :
+source my_venv/bin/activate
+# You should have something like :
+(my_venv) C:\Users\...\Civil-Work-Bidding-And-Investment-Helper>
+```
+
+### Install all required librairies :
+
+```sh
+pip install -r requirements.txt
+```
+
+## Install the project
+
+The install.py script permit you to dowload and create all folders and files for the project. 
+
+**(It can take several minutes because of we download and create all necessaries files)**
+
+```sh
+# go to the src folder and run :
+python ./install.py
+```
+
 ## License
 
 Distributed under the MIT License. See LICENSE.txt for more information.
