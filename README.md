@@ -102,6 +102,8 @@ Distributed under the MIT License. See LICENSE.txt for more information.
 [hicham-mrani](https://github.com/hicham-mrani) and 	
 [levist7](https://github.com/levist7)
 
+Baptiste Cournault Vidyard link : https://share.vidyard.com/watch/4Y87zu2K8SoQm3774TRS4a?
+
 ## Contact
 
 Please see contact details on presentation file [above](#project).
