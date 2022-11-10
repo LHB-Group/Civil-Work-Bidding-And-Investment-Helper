@@ -144,12 +144,12 @@ pip install -r requirements.txt
 
 The install.py script permit you to dowload and create all folders and files for the project. 
 
-**(It can take several minutes because of we download and create all necessaries files)**
-
+**<p>Build the complete dataset can take several hours because of feature engineering but you but <span style ="color: red">you can download it [here](https://drive.google.com/file/d/1Ffbhy12m4JG9REEdSQwwewIFE0KUiEX3/view?usp=sharing)</span> and move it to < Datasets > Folder</p>**
 ```sh
 # go to the src folder and run :
 python ./install.py
 ```
+**<p>(Build the complete dataset can take several hours because of feature engineering)</p>**
 
 ## License
 
