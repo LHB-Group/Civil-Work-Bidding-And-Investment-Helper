@@ -9,12 +9,15 @@
 """
 
 import pandas as pd
+import geopandas as gpd
 import numpy as np
 import time
 import requests
-from tqdm import tqdm # Used for progress bar
+from tqdm import tqdm  # Used for progress bar
 import sys
 from sklearn.model_selection import KFold, cross_validate
+from geopandas import GeoSeries
+from tqdm import tqdm  # Used for progress bar
 
 
 def re_category(ds, counts, repl_):
@@ -92,12 +95,13 @@ def cat_stories(st):
     return y
 
 
-def get_polygon_list(points):
+def get_polygon_list(points: GeoSeries, polygons: GeoSeries):
     polygon_list = []
-    for i in range(len(points)):
-        mask = polygons_serie.contains(points_serie[i])
-        polygon_list.append(polygons_serie[mask])
-        print(f'{len(polygon_list)}\n')
+    for point in tqdm(points, total=len(points),
+                      desc="Matching Building Permits Points with Building Footprints :"):
+        mask = polygons.contains(point)
+        polygon = polygons[mask]
+        polygon_list.append(polygon)
     return polygon_list
 
 
@@ -197,7 +201,8 @@ def dl_progress_bar(url, folder, file, filesize, chunk_size=1000):
             total=filesize,  # the total iteration.
             # default goes to stderr, this is the display on console.
             file=sys.stdout,
-            desc="Downloading : " + file  # prefix to be displayed on progress bar.
+            # prefix to be displayed on progress bar.
+            desc="Downloading : " + file
     ) as progress:
         for chunk in r.iter_content(chunk_size=chunk_size):
             # download the file chunk by chunk
@@ -205,8 +210,10 @@ def dl_progress_bar(url, folder, file, filesize, chunk_size=1000):
             # on each chunk update the progress bar.
             progress.update(datasize)
 
+
 def format_street_name(street_name):
     return street_name[1:] if street_name[0] == "0" else street_name
+
 
 def format_street_suffix(street_suffix):
 
