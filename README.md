@@ -157,9 +157,18 @@ Distributed under the MIT License. See LICENSE.txt for more information.
 
 ## Authors
 
-[croustibats](https://github.com/croustibats) ,
-[hicham-mrani](https://github.com/hicham-mrani) and 	
-[levist7](https://github.com/levist7)
+Baptiste Cournault :
+
+[GitHub](https://github.com/croustibats) - 
+[Vidyard link](https://share.vidyard.com/watch/4Y87zu2K8SoQm3774TRS4a?)
+
+Hicham Mrani :
+
+[GitHub](https://github.com/hicham-mrani)
+
+Levent ISBILIROGLU :
+
+[GitHub](https://github.com/levist7)
 
 ## Contact
 
@@ -167,4 +176,3 @@ Please see contact details on presentation file [above](#project).
 
 ---
 Made with ❤️ in Paris
----
