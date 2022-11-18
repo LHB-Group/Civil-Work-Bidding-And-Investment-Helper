@@ -144,12 +144,17 @@ pip install -r requirements.txt
 
 The install.py script permit you to dowload and create all folders and files for the project. 
 
-**<p>Build the complete dataset can take several hours because of feature engineering but you but <span style ="color: red">you can download it [here](https://drive.google.com/file/d/1Ffbhy12m4JG9REEdSQwwewIFE0KUiEX3/view?usp=sharing)</span> and move it to < Datasets > Folder</p>**
+**<p>Build the complete dataset can take several hours because of feature engineering but <span style ="color: red">you can download it [here](https://drive.google.com/file/d/1Ffbhy12m4JG9REEdSQwwewIFE0KUiEX3/view?usp=sharing)</span> and move it to [Datasets] Folder</p>**
 ```sh
 # go to the src folder and run :
 python ./install.py
 ```
-**<p>(Build the complete dataset can take several hours because of feature engineering)</p>**
+**If you download the File you need to rename it :**
+<p>
+Exemple : 20220823_Building_Permits.csv (CreationDate+FileName)
+
+You need to rename it to Building_Permits.csv
+</p>
 
 ## License
 
