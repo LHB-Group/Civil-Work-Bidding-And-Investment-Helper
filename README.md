@@ -164,8 +164,7 @@ Distributed under the MIT License. See LICENSE.txt for more information.
 
 Baptiste Cournault :
 
-[GitHub](https://github.com/croustibats) - 
-[Vidyard link](https://share.vidyard.com/watch/4Y87zu2K8SoQm3774TRS4a?)
+[GitHub](https://github.com/croustibats)
 
 Hicham Mrani :
 
